@@ -5,11 +5,13 @@
       "includePath": [
         "Core/Inc",
         "Core/Src/components/actions/include",
+        "Core/Src/components/actions/switch_commute",
         "Core/Src/components/commands/include",
         "Core/Src/components/config/include",
         "Core/Src/components/fsm/include",
         "Core/Src/components/interpreter/include",
         "Core/Src/components/interpreter/parser/include",
+        "Core/Src/components/nanotimer/include",
         "Core/Src/components/peripherals",
         "Core/Src/components/peripherals/pins/include",
         "Core/Src/components/queues/include",

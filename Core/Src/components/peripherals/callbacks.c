@@ -15,8 +15,28 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
         if (QUEUE_MODE == CPU)
         {
             unsigned char curChar = rx_data_ptr;
-            if (curChar != '\n' && curChar != '\r' && curChar != 127) // Delimiter
+            switch (curChar)
             {
+            case '\n':
+            case '\r':
+                // End of command
+                inProgress = 0;
+                lastTick = 0;
+                // Move buffer to queue
+                ucq_addElement(rx_buffer);
+                HAL_UART_Transmit(huart, (unsigned char *)"\r\n", 2, HAL_MAX_DELAY);
+                break;
+            case 127:
+                // Backspace
+                if (inProgress > 0)
+                {
+                    // Delete last character
+                    rx_buffer[--inProgress] = '\0';
+                    HAL_UART_Transmit(huart, (unsigned char *)"\033[2K\r", 6, HAL_MAX_DELAY);
+                    HAL_UART_Transmit(huart, rx_buffer, strlen((char *)rx_buffer), HAL_MAX_DELAY);
+                }
+                break;
+            default:
                 // Byte received
                 rx_buffer[inProgress++] = curChar;
                 // Verify timeout
@@ -26,37 +46,17 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
                     // Flush everything
                     inProgress = 0;
                     lastTick = 0;
-                    // Set all rx_buffer to null
-                    memset(rx_buffer, '\0', sizeof(rx_buffer[0]) * MAX_COMMAND_LENGTH);
+                    // Set all rx_buffer to null, this memset is not actually needed for sake of performance
+                    // memset(rx_buffer, '\0', sizeof(rx_buffer[0]) * MAX_COMMAND_LENGTH);
                 }
                 else
                 {
                     lastTick = HAL_GetTick();
                 }
                 HAL_UART_Transmit(huart, &rx_data_ptr, 1, HAL_MAX_DELAY);
-            }
-            else if (curChar == 127) //Backspace deletes previous character
-            {
-                if (inProgress > 0)
-                {
-                    // Delete last character
-                    rx_buffer[--inProgress] = '\0';
-                    HAL_UART_Transmit(huart, (unsigned char *)"\033[2K\r", 6, HAL_MAX_DELAY);
-                    HAL_UART_Transmit(huart, rx_buffer, strlen((char*)rx_buffer), HAL_MAX_DELAY);
-                }
-            }
-            else
-            {
-                // Append terminator
-                rx_buffer[inProgress] = '\0';
-                // End of command
-                inProgress = 0;
-                lastTick = 0;
-                // Move buffer to queue
-                ucq_addElement(rx_buffer);
-                HAL_UART_Transmit(huart, (unsigned char *)"\r\n", 2, HAL_MAX_DELAY);
+                break;
             }
         }
+        HAL_UART_Receive_IT(huart, &rx_data_ptr, 1);
     }
-    HAL_UART_Receive_IT(huart, &rx_data_ptr, 1);
 }

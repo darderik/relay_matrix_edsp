@@ -12,8 +12,7 @@
 #include "commands.h"
 #include <inttypes.h>
 
-#define SYS_CHECK_MAXLENGTH 2048
-#define ACTION_DATA_MAXLENGTH 32
+
 typedef enum action_status
 {
     ACTION_OK,

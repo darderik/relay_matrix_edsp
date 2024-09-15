@@ -38,6 +38,7 @@ BUILD_DIR = build
 C_SOURCES =  \
 Core/Src/components/actions/src/actions.c \
 Core/Src/components/actions/src/actions_helper.c \
+Core/Src/components/actions/switch_commute/switch_commute.c \
 Core/Src/components/commands/src/commands.c \
 Core/Src/components/config/src/config.c \
 Core/Src/components/fsm/src/fsm.c \
@@ -45,9 +46,13 @@ Core/Src/components/interpreter/parser/src/parser.c \
 Core/Src/components/interpreter/src/interpreter.c \
 Core/Src/components/interpreter/src/interpreter_helper.c \
 Core/Src/components/logger/src/logger.c \
+Core/Src/components/nanotimer/src/nanotimer.c \
 Core/Src/components/peripherals/callbacks.c \
 Core/Src/components/peripherals/pins/src/pins.c \
+Core/Src/components/queues/src/interpreter_status_queue.c \
 Core/Src/components/queues/src/queues.c \
+Core/Src/components/queues/src/sys_log_queue.c \
+Core/Src/components/queues/src/unparsed_command_queue.c \
 Core/Src/main.c \
 Core/Src/stm32f4xx_hal_msp.c \
 Core/Src/stm32f4xx_it.c \
@@ -144,11 +149,13 @@ AS_INCLUDES = \
 C_INCLUDES =  \
 -ICore/Inc \
 -ICore/Src/components/actions/include \
+-ICore/Src/components/actions/switch_commute \
 -ICore/Src/components/commands/include \
 -ICore/Src/components/config/include \
 -ICore/Src/components/fsm/include \
 -ICore/Src/components/interpreter/include \
 -ICore/Src/components/interpreter/parser/include \
+-ICore/Src/components/nanotimer/include \
 -ICore/Src/components/peripherals \
 -ICore/Src/components/peripherals/pins/include \
 -ICore/Src/components/queues/include \

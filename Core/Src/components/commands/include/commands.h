@@ -6,11 +6,12 @@
  * @date      02-09-2024
  * @copyright 2024, your company / association / school
  */
+#include "config.h"
+#include <inttypes.h>
 #ifndef COMMAND_H_
 #define COMMAND_H_
 
 #define MAX_PARAMS 8
-#include <inttypes.h>
 typedef struct command
 {
     unsigned char *unformattedString;

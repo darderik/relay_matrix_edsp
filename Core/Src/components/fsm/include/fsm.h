@@ -8,6 +8,7 @@ typedef enum {
     IDLE,
     RECEIVE,
     INTERPRET,
+    LOG,
     EXECUTE,
     FAIL,
     OUTPUT

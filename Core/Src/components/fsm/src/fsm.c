@@ -23,7 +23,7 @@ void state_handler(UART_HandleTypeDef *huart, SPI_HandleTypeDef *hspi)
     {
     case INIT:
         // Turn on PSU TBD, high NRST NCS
-        //HAL_GPIO_WritePin(PS_ON_PORT, PS_ON_PIN, GPIO_PIN_RESET);
+        // HAL_GPIO_WritePin(PS_ON_PORT, PS_ON_PIN, GPIO_PIN_RESET);
         if (QUEUE_MODE == CPU)
         {
             HAL_UART_Receive_IT(huart, &rx_data_ptr, 1);
@@ -37,8 +37,7 @@ void state_handler(UART_HandleTypeDef *huart, SPI_HandleTypeDef *hspi)
         }
         else
         {
-            // TBD
-            HAL_Delay(100);
+            state_set(LOG);
         }
         break;
     case INTERPRET:
@@ -51,6 +50,13 @@ void state_handler(UART_HandleTypeDef *huart, SPI_HandleTypeDef *hspi)
                 state_set(FAIL);
             }
         }
+        else
+        {
+            state_set(IDLE);
+        }
+        break;
+    case LOG:
+        sysLogQueue_populate();
         state_set(IDLE);
         break;
     case FAIL:
