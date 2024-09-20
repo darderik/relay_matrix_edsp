@@ -8,6 +8,7 @@
  */
 
 #include "actions.h"
+#include "fsm.h"
 #include "interpreter.h"
 #include "commands.h"
 #include "queues.h"
@@ -34,4 +35,9 @@ void sys_log(interpreter_status_t *int_status)
     memset(sysLogMessage, 0, sizeof(sysLogMessage));
 }
 
+void sys_halt(interpreter_status_t *int_status) {
+     //Turn off PSU. The system will need to initialize on next command
+     HAL_GPIO_WritePin(PS_ON_GPIO,PS_ON_PIN,GPIO_PIN_SET);
+     state_set(PASSIVE);
+}
 

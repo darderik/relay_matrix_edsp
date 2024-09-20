@@ -11,7 +11,8 @@ typedef enum {
     LOG,
     EXECUTE,
     FAIL,
-    OUTPUT
+    OUTPUT,
+    PASSIVE
 } state_t;
 extern unsigned char* unparsed_command_queue[8];
 extern state_t state;

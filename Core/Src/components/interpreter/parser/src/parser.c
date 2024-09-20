@@ -234,32 +234,28 @@ uint8_t grabFirstChar(unsigned char *string2Count, uint8_t sizeStr)
 }
 
 /**
- * @brief Identifies the index of the last character of a piece of a command string, starting from a given offset.
+ * @brief Finds the index of the last non-space character in a piece of a string.
  *
- * @param string2Count The string to be analyzed.
- * @param ofs The offset to start from.
- * @param sizeStr The length of the string.
- * @return uint8_t The index of the last character of the piece.
+ * @param string The string to analyze.
+ * @param offset The starting offset.
+ * @param length The length of the string.
+ * @return uint8_t The index of the last non-space character.
  */
-uint8_t grabLastChar_piece(unsigned char *string2Count, uint8_t ofs, uint8_t sizeStr)
+uint8_t findLastNonSpaceChar(const unsigned char *string, uint8_t offset, uint8_t length)
 {
-    unsigned char curChar;
-    uint8_t lastCharPos = ofs;
+    uint8_t lastIndex = offset;
 
-    // Find the last character before a space
-    for (uint8_t i = ofs; i < sizeStr; i++)
+    for (uint8_t i = offset; i < length; ++i)
     {
-        curChar = string2Count[i];
-        if (!isspace(curChar))
-        {
-            lastCharPos = i;
-        }
-        else
+        if (isspace(string[i]))
         {
             break;
         }
+
+        lastIndex = i;
     }
-    return lastCharPos;
+
+    return lastIndex;
 }
 
 /**

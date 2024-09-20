@@ -45,10 +45,8 @@ Core/Src/components/fsm/src/fsm.c \
 Core/Src/components/interpreter/parser/src/parser.c \
 Core/Src/components/interpreter/src/interpreter.c \
 Core/Src/components/interpreter/src/interpreter_helper.c \
-Core/Src/components/logger/src/logger.c \
 Core/Src/components/nanotimer/src/nanotimer.c \
 Core/Src/components/peripherals/callbacks.c \
-Core/Src/components/peripherals/pins/src/pins.c \
 Core/Src/components/queues/src/interpreter_status_queue.c \
 Core/Src/components/queues/src/queues.c \
 Core/Src/components/queues/src/sys_log_queue.c \
@@ -157,7 +155,6 @@ C_INCLUDES =  \
 -ICore/Src/components/interpreter/parser/include \
 -ICore/Src/components/nanotimer/include \
 -ICore/Src/components/peripherals \
--ICore/Src/components/peripherals/pins/include \
 -ICore/Src/components/queues/include \
 -IDrivers/CMSIS/Device/ST/STM32F4xx/Include \
 -IDrivers/CMSIS/Include \

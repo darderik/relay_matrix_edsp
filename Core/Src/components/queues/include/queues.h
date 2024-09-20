@@ -13,7 +13,7 @@ typedef struct unparsed_entry {
 extern unsigned char rx_data_ptr;
 extern unsigned char rx_buffer[MAX_COMMAND_LENGTH];
 extern unparsed_entry_t *unparsed_head;
-extern interpreter_status_t *statusQueue[];
+extern interpreter_status_t *statusQueue[MAX_STATUS_QUEUE_SIZE];
 extern unsigned char sysLogMessage[MAX_SYSLOG_BUFFER_SIZE];
 
 void ucq_addElement(unsigned char *command);
