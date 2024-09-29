@@ -60,3 +60,15 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
         HAL_UART_Receive_IT(huart, &rx_data_ptr, 1);
     }
 }
+
+void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
+{
+    if (huart->Instance == USART2)
+    {
+        // WE HavE received a string,add to ucq (if there is space)
+        rx_buffer[Size] = '\0';
+        ucq_addElement(rx_buffer);
+    }
+    HAL_UART_Transmit(huart, (unsigned char *)"|CTS|", 6, HAL_MAX_DELAY);
+    HAL_UARTEx_ReceiveToIdle_DMA(huart, rx_buffer, MAX_COMMAND_LENGTH);
+}

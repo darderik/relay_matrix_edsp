@@ -13,6 +13,16 @@
 
 uint8_t oldByteSSR = 0;
 
+/**
+ * @brief      SWITCH:COMMUTE command. This command is used to activate/deactivate coils
+ *             of the relay board. The command takes as argument a single string of the form
+ *             "a1", "b2", "c3", "d4", where "a", "b", "c", "d" are the relay group
+ *             letters, and 1, 2, 3, 4 are the output numbers.
+ *
+ * @param[in]  int_status  Interpreter status structure pointer
+ *
+ * @return     None
+ */
 void switch_commute(interpreter_status_t *int_status)
 {
     command_t commandData = int_status->command;
@@ -30,13 +40,13 @@ void switch_commute(interpreter_status_t *int_status)
             if (SWITCH_COMMUTE_MODE == SWITCH_EMR)
             {
                 byteP = byteP << curOut * 2;
-                transmitSPI(curGroup, byteP, 1);
+                transmitSPI(&curGroup, byteP, 1);
             }
             else if (SWITCH_COMMUTE_MODE == SWITCH_SSR)
             {
                 byteP = oldByteSSR | (0b01 << 2 * curOut);
                 oldByteSSR = byteP;
-                transmitSPI(curGroup, byteP, 0);
+                transmitSPI(&curGroup, byteP, 0);
             }
         }
     }
@@ -70,13 +80,13 @@ void switch_commute_exclusive(interpreter_status_t *int_status)
                 // If EMR, the exclusive mode translates in an OR bitwise between byteP and rstByte without a specific reset coil
                 byteP = byteP << curOut * 2;
                 byteP = byteP | (rstByte - (byteP << 1));
-                transmitSPI(curGroup, byteP, 1);
+                transmitSPI(&curGroup, byteP, 1);
             }
             else if (SWITCH_COMMUTE_MODE == SWITCH_SSR)
             {
                 byteP = 0b01 << 2 * curOut;
                 oldByteSSR = byteP;
-                transmitSPI(curGroup, byteP, 0);
+                transmitSPI(&curGroup, byteP, 0);
             }
         }
     }
@@ -127,7 +137,7 @@ uint8_t checkResetStatus(relay_group_t curGroup, interpreter_status_t *int_statu
     {
         int_status->action_return.status = ACTION_ERROR;
         strcpy((char*)int_status->action_return.data, "TPL9201: No Power RST 0");
-        state_set(FAIL);
+        int_status->action_return.status= ACTION_ERROR;
         return 0;
     }
     return 1;
@@ -145,16 +155,16 @@ uint8_t checkResetStatus(relay_group_t curGroup, interpreter_status_t *int_statu
  *             and then sets the NCS pin high. If isLatching is set, it waits an additional
  *             8ms for the coil to latch and then resets the RST pin.
  */
-void transmitSPI(relay_group_t curGroup, uint8_t byteP, uint8_t isLatching)
+void transmitSPI(relay_group_t* curGroup, uint8_t byteP, uint8_t isLatching)
 {
-    HAL_GPIO_WritePin(curGroup.gpio_port_ncs, curGroup.ncs_pin, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(curGroup->gpio_port_ncs, curGroup->ncs_pin, GPIO_PIN_RESET);
     HAL_SPI_Transmit(&hspi1, &byteP, 1, HAL_MAX_DELAY);
     waitMultiple20ns(8); // Wait for transmit delay
-    HAL_GPIO_WritePin(curGroup.gpio_port_ncs, curGroup.ncs_pin, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(curGroup->gpio_port_ncs, curGroup->ncs_pin, GPIO_PIN_SET);
     if (isLatching)
     {
         HAL_Delay(8); // Debounce
-        HAL_GPIO_WritePin(curGroup.gpio_port_nrst, curGroup.nrst_pin, GPIO_PIN_RESET);
+        HAL_GPIO_WritePin(curGroup->gpio_port_nrst, curGroup->nrst_pin, GPIO_PIN_RESET);
     }
 }
 

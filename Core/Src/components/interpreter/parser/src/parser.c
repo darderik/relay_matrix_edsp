@@ -8,38 +8,41 @@
  */
 void parseCommand(command_t *instance, unsigned char *cmdString)
 {
-    unsigned char *rootHolder;
-    unsigned char *unformattedString = cleanCmd(cmdString); // Clean the command string
-    uint8_t isValid = preParseCommand(unformattedString);
-    if (!isValid)
+    size_t rootSize = 0;
+    unsigned char *cleanedCmdString = cleanCmd(cmdString);
+
+    if (!preParseCommand(cleanedCmdString))
     {
         return;
     }
 
     // Identify root command (e.g., THIS:IS:ROOT arg1 arg2)
-    uint8_t rootSize = countLastChar_piece(unformattedString, 0, strlen((char *)unformattedString)); // Include null terminator
-    rootHolder = calloc(rootSize + 1, sizeof(char));
-    strncpy((char *)rootHolder, (char *)unformattedString, rootSize);
-    rootHolder[rootSize] = '\0'; // Null terminate
-    instance->rootCommand = rootHolder;
-    instance->unformattedString = unformattedString;
+    while (cleanedCmdString[rootSize] != ' ' && cleanedCmdString[rootSize] != '\0')
+    {
+        rootSize++;
+    }
+
+    instance->rootCommand = strndup((const char *)cleanedCmdString, rootSize);
+    instance->unformattedString = cleanedCmdString;
 
     // Check if there are any arguments
-    if (rootSize != strlen((char *)unformattedString))
+    if (cleanedCmdString[rootSize] != '\0')
     {
-        uint8_t curArgStart = rootSize + 1; // Start from the first character of the argument, skip a space
-        uint8_t argsCount = countWhiteSpaces(unformattedString, strlen((char *)unformattedString));
-        uint8_t offset = 0;
+        size_t curArgStart = rootSize + 1; // Start from the first character of the argument, skip a space
+        size_t argsCount = 0;
+        size_t offset = 0;
 
-        for (uint8_t i = 0; i < argsCount && i < MAX_PARAMS; i++)
+        while (cleanedCmdString[curArgStart + offset] != '\0')
         {
-            curArgStart += offset;
-            uint8_t curArgLength = countLastChar_piece(unformattedString, curArgStart, strlen((char *)unformattedString));
-            unsigned char *curArg = calloc(curArgLength + 1, sizeof(char));
-            strncpy((char *)curArg, (char *)(unformattedString + curArgStart), curArgLength);
-            curArg[curArgLength] = '\0'; // Null terminate
-            offset = curArgLength + 1;
-            instance->parameters[i] = curArg;
+            size_t curArgLength = 0;
+            while (cleanedCmdString[curArgStart + offset + curArgLength] != ' ' && cleanedCmdString[curArgStart + offset + curArgLength] != '\0')
+            {
+                curArgLength++;
+            }
+
+            instance->parameters[argsCount] = strndup((const char *)(cleanedCmdString + curArgStart + offset), curArgLength);
+            offset += curArgLength + 1;
+            argsCount++;
         }
         instance->paramsCount = argsCount < MAX_PARAMS ? argsCount : MAX_PARAMS;
     }
@@ -53,137 +56,121 @@ uint8_t preParseCommand(unsigned char *cleanedString)
 /**
  * @brief Cleans the command string by replacing multiple spaces with a single space and removing leading/trailing spaces.
  *
- * @param cmdString The original command string.
+ * @param command_string The original command string.
  * @return char* The cleaned command string.
  */
-unsigned char *cleanCmd(unsigned char *cmdString)
+unsigned char *clean_command_string(unsigned char *command_string)
 {
-    uint8_t strL = strlen((char *)cmdString);
-    unsigned char cleanedStr[strL + 1];
-    unsigned char *cleanedStrFinal;
-    uint8_t j = 0;
-    uint8_t in_space = 0;
-    for (uint8_t i = 0; i < strL; i++)
+    size_t command_length = strlen((char *)command_string);
+    unsigned char *cleaned_string = malloc(command_length + 1);
+    size_t cleaned_string_index = 0;
+    size_t in_space = 0;
+
+    for (size_t i = 0; i < command_length; i++)
     {
-        unsigned char curChar = cmdString[i];
-        if (isspace(curChar) || (0) /*add other characters*/)
+        unsigned char current_character = command_string[i];
+        if (isspace(current_character))
         {
-            if (!in_space && j != 0 && j != strL - 1)
+            if (!in_space && cleaned_string_index > 0 && cleaned_string_index < command_length - 1)
             {
-                cleanedStr[j++] = ' ';
+                cleaned_string[cleaned_string_index++] = ' ';
                 in_space = 1;
             }
         }
         else
         {
-            cleanedStr[j++] = tolower(curChar);
+            cleaned_string[cleaned_string_index++] = tolower(current_character);
             in_space = 0;
         }
     }
-    cleanedStr[j] = '\0'; // Null terminate the cleaned string
+    cleaned_string[cleaned_string_index] = '\0'; // Null terminate the cleaned string
 
     // Trim trailing space
-    if (j > 0 && cleanedStr[j - 1] == ' ')
+    if (cleaned_string_index > 0 && cleaned_string[cleaned_string_index - 1] == ' ')
     {
-        cleanedStr[j - 1] = '\0';
+        cleaned_string[cleaned_string_index - 1] = '\0';
     }
 
     // Trim leading space
-    if (cleanedStr[0] == ' ')
+    if (cleaned_string[0] == ' ')
     {
-        memmove(cleanedStr, cleanedStr + 1, strlen((char *)cleanedStr));
+        memmove(cleaned_string, cleaned_string + 1, strlen((char *)cleaned_string));
     }
-    cleanedStrFinal = malloc(strlen((char *)cleanedStr) + 1);
-    strcpy((char *)cleanedStrFinal, (char *)cleanedStr);
-    return cleanedStrFinal;
+
+    return cleaned_string;
 }
 /**
  * @brief Counts the number of spaces in a string, excluding trailing spaces.
  *
- * @param string2Count The string to be analyzed.
- * @param sizeStr The length of the string.
+ * @param string The string to be analyzed.
+ * @param string_length The length of the string.
  * @return uint8_t The number of spaces in the string.
  */
-uint8_t countWhiteSpaces(unsigned char *string2Count, uint8_t sizeStr)
+uint8_t count_white_spaces(unsigned char *string, uint8_t string_length)
 {
-    uint8_t spacesCtr = 0;
-    unsigned char curChar;
-    uint8_t lastCharPos = 0;
+    uint8_t space_count = 0;
+    uint8_t i;
 
-    // Find the last character which is not a space
-    for (uint8_t i = 0; i < sizeStr; i++)
+    // Find the last non-space character
+    for (i = string_length - 1; i != 0 && isspace(string[i]); i--);
+
+    // Count spaces up to the last non-space character
+    for (uint8_t j = 0; j < i; j++)
     {
-        curChar = string2Count[i];
-        if (curChar != ' ' && curChar != '\0')
-        {
-            lastCharPos = i;
-        }
+        if (isspace(string[j]))
+            space_count++;
     }
 
-    // Count spaces up to the last character
-    for (uint8_t i = 0; i < lastCharPos; i++)
-    {
-        curChar = string2Count[i];
-        if (curChar == ' ')
-        {
-            spacesCtr++;
-        }
-    }
-    return spacesCtr;
+    return space_count;
 }
 
 /**
  * @brief Counts the number of characters before a space, starting from a given offset.
  *
- * @param string2Count The string to be analyzed.
- * @param ofs The offset to start counting from.
- * @param sizeStr The length of the string.
+ * @param[in] string The string to be analyzed.
+ * @param[in] offset The offset to start counting from.
+ * @param[in] length The length of the string.
  * @return uint8_t The number of characters before a space.
  */
-uint8_t countLastChar_piece(unsigned char *string2Count, uint8_t ofs, uint8_t sizeStr)
+uint8_t countCharactersBeforeSpace(const unsigned char *string, uint8_t offset, uint8_t length)
 {
-    unsigned char curChar;
-    uint8_t lastCharPos = ofs;
-
-    // Find the last character before a space
-    for (uint8_t i = ofs; i < sizeStr; i++)
+    uint8_t characterCount = 0;
+    // Count characters before a space
+    for (uint8_t i = offset; i < length; i++)
     {
-        curChar = string2Count[i];
-        if (!isspace(curChar) && curChar != '\0')
-        {
-            lastCharPos = i;
-        }
-        else
+        if (isspace(string[i]))
         {
             break;
         }
+        characterCount++;
     }
-    return lastCharPos + 1 - ofs;
+    return characterCount;
 }
 
 /**
  * @brief Identifies the index of the last character of a command string.
  *
- * @param string2Count The string to be analyzed.
- * @param sizeStr The length of the string.
- * @return uint8_t The index of the last character.
+ * @param[in] string The string to be analyzed.
+ * @param[in] string_length The length of the string.
+ * @return int8_t The index of the last character.
  */
-int8_t grabLastChar(unsigned char *string2Count, uint8_t sizeStr)
+int8_t grabLastChar(unsigned char *string, uint8_t string_length)
 {
-    unsigned char curChar;
-    int8_t lastCharPos = -1;
+    int8_t last_char_pos = -1;
+
     // Find the last character which is not a space
-    for (uint8_t i = sizeStr; i > 0; i--)
+    for (int8_t i = string_length - 1; i >= 0; i--)
     {
-        curChar = string2Count[i];
-        if (!isspace(curChar) && curChar != '\0')
+        if (!isspace(string[i]) && string[i] != '\0')
         {
-            lastCharPos = i;
+            last_char_pos = i;
             break;
         }
     }
-    return lastCharPos;
+
+    return last_char_pos;
 }
+
 
 /**
  * @brief Identifies the index of the last occurrence of a specific character in a string.

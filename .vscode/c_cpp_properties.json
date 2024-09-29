@@ -1,30 +1,30 @@
 {
-  "configurations": [
-    {
-      "name": "STM32",
-      "includePath": [
-        "Core/Inc",
-        "Core/Src/components/actions/include",
-        "Core/Src/components/actions/switch_commute",
-        "Core/Src/components/commands/include",
-        "Core/Src/components/config/include",
-        "Core/Src/components/fsm/include",
-        "Core/Src/components/interpreter/include",
-        "Core/Src/components/interpreter/parser/include",
-        "Core/Src/components/nanotimer/include",
-        "Core/Src/components/peripherals",
-        "Core/Src/components/queues/include",
-        "Drivers/CMSIS/Device/ST/STM32F4xx/Include",
-        "Drivers/CMSIS/Include",
-        "Drivers/STM32F4xx_HAL_Driver/Inc",
-        "Drivers/STM32F4xx_HAL_Driver/Inc/Legacy"
-      ],
-      "defines": [
-        "STM32F401xE",
-        "USE_HAL_DRIVER"
-      ],
-      "compilerPath": "C:\\USERS\\DARDO\\APPDATA\\ROAMING\\CODE\\USER\\GLOBALSTORAGE\\BMD.STM32-FOR-VSCODE\\@XPACK-DEV-TOOLS\\ARM-NONE-EABI-GCC\\13.2.1-1.1.1\\.CONTENT\\BIN\\ARM-NONE-EABI-GCC.EXE"
-    }
-  ],
-  "version": 4
+    "configurations": [
+        {
+            "name": "STM32",
+            "includePath": [
+                "Core/Inc",
+                "Core/Src/components/actions/include",
+                "Core/Src/components/actions/switch_commute",
+                "Core/Src/components/commands/include",
+                "Core/Src/components/config/include",
+                "Core/Src/components/fsm/include",
+                "Core/Src/components/interpreter/include",
+                "Core/Src/components/interpreter/parser/include",
+                "Core/Src/components/nanotimer/include",
+                "Core/Src/components/peripherals",
+                "Core/Src/components/queues/include",
+                "Drivers/CMSIS/Device/ST/STM32F4xx/Include",
+                "Drivers/CMSIS/Include",
+                "Drivers/STM32F4xx_HAL_Driver/Inc",
+                "Drivers/STM32F4xx_HAL_Driver/Inc/Legacy"
+            ],
+            "defines": [
+                "STM32F401xE",
+                "USE_HAL_DRIVER"
+            ],
+            "compilerPath": "C:\\USERS\\DARDO\\APPDATA\\ROAMING\\CODE\\USER\\GLOBALSTORAGE\\BMD.STM32-FOR-VSCODE\\@XPACK-DEV-TOOLS\\ARM-NONE-EABI-GCC\\13.2.1-1.1.1\\.CONTENT\\BIN\\ARM-NONE-EABI-GCC.EXE"
+        }
+    ],
+    "version": 4
 }

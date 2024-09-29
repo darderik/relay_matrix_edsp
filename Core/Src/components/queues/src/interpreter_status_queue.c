@@ -1,60 +1,58 @@
 #include "queues.h"
+#include <stdlib.h>
 //--------------------Interpreter Status Queue Helper--------------------
 void statusQueue_addElement(interpreter_status_t *status)
 {
-    for (uint8_t i = 0; i < MAX_STATUS_QUEUE_SIZE; i++)
-    {   
-        interpreter_status_t *curStatus = statusQueue[i];
-        if (curStatus == NULL)
-        {
-            statusQueue[i] = status;
-            break;
-        }
-    }
-    
-}
-//Return index of first non null element from statusQueue array
-int8_t statusQueue_getFirstElementIdx() {
-    for (uint8_t i = 0; i < MAX_STATUS_QUEUE_SIZE; i++)
+    if (!(statusQueue_getSize() >= MAX_STATUS_QUEUE_SIZE))
     {
-        if (statusQueue[i] != NULL)
+        // Space left
+        interpreter_status_entry_t *newEntry = (interpreter_status_entry_t *)malloc(sizeof(interpreter_status_entry_t));
+        newEntry->status = *status;
+        newEntry->next = NULL;
+
+        if (statusQueue_list.head == NULL)
         {
-            return i;
+            // First element
+            statusQueue_list.head = newEntry;
         }
+        else
+        {
+            statusQueue_list.tail->next = newEntry;
+        }
+        statusQueue_list.tail = newEntry;
+    } else {
+        //FIFO Logic, the first status will be deleted. Force append
+        statusQueue_popElement();
+        statusQueue_addElement(status);
     }
-    return -1;
 }
-void statusQueue_removeSpecificElement(interpreter_status_t* toRemove)
-{
-    for (uint8_t i = 0; i < MAX_STATUS_QUEUE_SIZE; i++)
+
+uint8_t statusQueue_getSize() {
+    uint8_t countList = 0;
+    interpreter_status_entry_t *current = statusQueue_list.head;
+    while (current != NULL)
     {
-        if (statusQueue[i] == toRemove)
-        {
-            interpreter_status_deconstructor(statusQueue[i]);
-            statusQueue[i] = NULL;
-            break;
-        }
+        countList++;
+        current = current->next;
     }
-    
-}
-void statusQueue_clear(){
-    for (uint8_t i = 0; i < MAX_STATUS_QUEUE_SIZE; i++)
-    {
-        if (statusQueue[i] != NULL)
-        {
-            interpreter_status_deconstructor(statusQueue[i]);
-            statusQueue[i] = NULL;
-        }
-    }
+    return countList;
 }
 void statusQueue_popElement()
 {
-    if (statusQueue[0] != NULL)
+    if (statusQueue_list.head != NULL)
     {
-        interpreter_status_deconstructor(statusQueue[0]);
-        for (uint8_t i = 0; i < MAX_STATUS_QUEUE_SIZE - 1; i++)
+        if (statusQueue_list.head == statusQueue_list.tail)
         {
-            statusQueue[i] = statusQueue[i + 1];
+            // Only one element
+            free(statusQueue_list.head);
+            statusQueue_list.head = NULL;
+            statusQueue_list.tail = NULL;
+        }
+        else
+        {
+            interpreter_status_entry_t *temp = statusQueue_list.head;
+            statusQueue_list.head = temp->next;
+            free(temp);
         }
     }
 }

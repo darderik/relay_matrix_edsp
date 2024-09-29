@@ -14,20 +14,17 @@ const char* interpreter_flag_msg[] = {"OK", "INVALID COMMAND", "INVALID ARGS"};
 
 /**
  * @brief Interpret and Execute a command
- * 
- * @return interpreter_status_t* 
+ *
+ * @param[out] int_status  Interpreter status structure pointer
+ *
+ * @return None
  */
-interpreter_status_t* interpretAndExecuteCommand() {
-    interpreter_status_t* int_status = (interpreter_status_t*)malloc(sizeof(interpreter_status_t));
-    if (int_status == NULL) {
-        // Handle memory allocation failure
-        return NULL;
-    }
+ void interpretAndExecuteCommand(interpreter_status_t* int_status) {
 
     // Parse first command from list of unparsed commands
     command_t* curCommandPtr = &(int_status->command);
     interpreter_status_constructor(int_status);
-    parseCommand(curCommandPtr, unparsed_head->command);
+    parseCommand(curCommandPtr, unparsed_list.head->command);
     ucq_popElement();
     
     // Do all checks on instance of command
@@ -50,8 +47,6 @@ interpreter_status_t* interpretAndExecuteCommand() {
             int_status->status = INTERPRETER_INVALID_COMMAND;
         }
     }
-
-    return int_status;
 }
 
 

@@ -2,15 +2,16 @@
 #include "main.h"
 #ifndef CONFIG_H_
 #define CONFIG_H_
-// System settings
-#define MAX_COMMAND_LENGTH 64
-#define MAX_TIMEOUT_MINUTES 3
-#define PSU_TURNON_TIMEOUT 600
+
 // Flags
 #define DMA 0
 #define CPU 1
 
-#define QUEUE_MODE CPU
+// System settings
+#define MAX_COMMAND_LENGTH 128
+#define MAX_TIMEOUT_MINUTES 3
+#define PSU_TURNON_TIMEOUT 600
+#define QUEUE_MODE DMA
 
 // Queues
 #define MAX_COMMAND_QUEUE_SIZE 8
@@ -21,12 +22,26 @@
 // Init
 #define PS_ON_GPIO GPIOC
 #define PS_ON_PIN GPIO_PIN_9 
+#define PWR_OK_GPIO GPIOB
+#define PWR_OK_PIN GPIO_PIN_5
 
 
  // Switch commute
 #define SWITCH_EMR 0
 #define SWITCH_SSR 1
 #define SWITCH_COMMUTE_MODE SWITCH_EMR
+
+/**
+ * @struct relay_group_t
+ *
+ * @brief Structure used to store relay groups
+ *
+ * @param letter         Letter of relay group
+ * @param gpio_port_ncs  GPIO port for NCS
+ * @param gpio_port_nrst GPIO port for nRST
+ * @param ncs_pin        Pin number for NCS
+ * @param nrst_pin       Pin number for nRST
+ */
 typedef struct
 {
     char letter;

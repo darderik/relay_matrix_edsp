@@ -1,76 +1,92 @@
 #include "queues.h"
 #include <stdlib.h>
 #include "parser.h"
+#include "fsm.h"
 //--------------------Unparsed Command Queue Helper--------------------
-// Function to add an element to the unparsed command queue, ucq unparsed command queue
-void ucq_addElement(unsigned char *command)
+
+/**
+ * @brief Adds a new command to the unparsed command queue. If the queue is already at
+ *        its maximum size, the command is discarded and the system is put into the FAIL state.
+ * @param command The command to be added to the queue
+ */
+void  ucq_addElement(unsigned char *command)
 {
-    if (!(ucq_getQueueSize() >= MAX_COMMAND_QUEUE_SIZE))
+    // This is thread safe because only executed during a callback
+    uint8_t countList = ucq_getQueueSize();
+    if (!(countList >= MAX_COMMAND_QUEUE_SIZE))
     {
-    // Create a new entry
-    unparsed_entry_t *newEntry = (unparsed_entry_t *)malloc(sizeof(unparsed_entry_t));
-    strcpy((char *)newEntry->command, (char *)command);
-    newEntry->next = NULL;
-    // If the queue is empty, set the new entry as the head
-    if (unparsed_head == NULL)
-    {
-         unparsed_head = newEntry;
+        // Create a new entry
+        unparsed_entry_t *newEntry = (unparsed_entry_t *)malloc(sizeof(unparsed_entry_t));
+        strcpy((char *)newEntry->command, (char *)command);
+        newEntry->next = NULL;
+        // If the queue is empty, set the new entry as the head
+        if (unparsed_list.head == NULL)
+        {
+            // One element
+            unparsed_list.head = newEntry;
+        }
+        else
+        {
+            unparsed_list.tail->next = newEntry;
+        }
+        unparsed_list.tail = newEntry;
     }
     else
     {
-        unparsed_entry_t *current = unparsed_head;
-        while (current->next != NULL)
-        {
-            current = current->next;
-        } // End of list reached
-        current->next = newEntry;
-    }
+        sysLogQueue_addMessage("--CRITICAL--\nCommand queue full,Discarding command. Debug needed.");
+        state_set(FAIL);
     }
 }
 
-// Function to remove specified element from the unparsed command queue, -1 no match, >0 match
-int8_t ucq_removeElement(unsigned char *keyCommand)
+/**
+ * @brief Removes the first occurrence of the given command from the unparsed command queue
+ * @param [in] command The command to be removed from the queue
+ * @return 1 if the command was found and removed, 0 otherwise
+ */
+uint8_t ucq_removeElement(unsigned char *command)
 {
-    int8_t removed = -1;
-    uint8_t count = 0;
-    // If the queue is empty, do nothing
-    if (unparsed_head != NULL)
+    uint8_t removed = 0;
+    unparsed_entry_t *current = unparsed_list.head;
+    unparsed_entry_t *previous = NULL;
+
+    while (current != NULL && strcmp((char *)current->command, (char *)command) != 0)
     {
-        unparsed_entry_t *current = unparsed_head;
-        while (current->command != keyCommand && current != NULL)
-        {
-            count++;
-            current = current->next;
-        }
-        if (current != NULL)
-        {
-            removed = 1;
-            // If the head is the element to be removed
-            if (current == unparsed_head)
-            {
-                unparsed_head = NULL;
-            }
-            else
-            {
-                unparsed_entry_t *previous = unparsed_head;
-                while (previous->next != current)
-                {
-                    previous = previous->next;
-                }
-                previous->next = current->next;
-            }
-            free(current->command);
-            free(current);
-        }
+        previous = current;
+        current = current->next;
     }
+
+    if (current != NULL)
+    {
+        removed = 1;
+        if (previous == NULL)
+        {
+            // Remove the head
+            unparsed_list.head = current->next;
+        }
+        else
+        {
+            previous->next = current->next;
+            // Update tail
+            if (current == unparsed_list.tail)
+            {
+                unparsed_list.tail = previous;
+            }
+        }
+        free(current);
+    }
+
     return removed;
 }
 
-// Function to get the number of elements in the unparsed command queue
+/**
+ * @brief Returns the number of elements in the unparsed command queue.
+ *
+ * @return The number of elements in the unparsed command queue.
+ */
 uint8_t ucq_getQueueSize()
 {
     uint8_t count = 0;
-    unparsed_entry_t *current = unparsed_head;
+    unparsed_entry_t *current = unparsed_list.head;
     while (current != NULL)
     {
         count++;
@@ -79,25 +95,45 @@ uint8_t ucq_getQueueSize()
     return count;
 }
 
-// Function to remove the first element from the unparsed command queue
+/**
+ * @brief Removes the first element from the unparsed command queue.
+ *
+ * @details Pops the first element from the unparsed command queue, freeing its memory
+ *          and updating the head of the queue.
+ */
 void ucq_popElement()
 {
-    if (unparsed_head != NULL)
+    if (unparsed_list.head != NULL)
     {
-        unparsed_entry_t *temp = unparsed_head;
-        unparsed_head = unparsed_head->next;
-        free(temp->command);
+        unparsed_entry_t *temp = unparsed_list.head;
+        if (unparsed_list.head == unparsed_list.tail)
+        {
+            // One element
+            unparsed_list.head = NULL;
+            unparsed_list.tail = NULL;
+        }
+        else
+        {
+            unparsed_list.head = temp->next;
+        }
         free(temp);
     }
 }
-// Function to clear the unparsed command queue
-unparsed_entry_t* ucq_findElem(char* rootcmd)
+
+/**
+ * @brief Finds an element in the unparsed command queue by its root command. First match.
+ *
+ * @param[in] rootcmd The root command to search for.
+ *
+ * @return The found element, or NULL if not found.
+ */
+unparsed_entry_t *ucq_findElem(char *rootcmd)
 {
-    unparsed_entry_t *found=NULL;
-    unparsed_entry_t *curElem = unparsed_head;
+    unparsed_entry_t *found = NULL;
+    unparsed_entry_t *curElem = unparsed_list.head;
     while (curElem != NULL)
     {
-        if (strcicmp((char*)curElem->command, rootcmd) == 0)
+        if (strcicmp((char *)curElem->command, rootcmd) == 0)
         {
             found = curElem;
             break;
@@ -108,7 +144,7 @@ unparsed_entry_t* ucq_findElem(char* rootcmd)
 // Function to clear the unparsed command queue
 void ucq_clearQueue()
 {
-    while (unparsed_head != NULL)
+    while (unparsed_list.head != NULL)
     {
         ucq_popElement();
     }

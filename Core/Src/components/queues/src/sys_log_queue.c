@@ -3,16 +3,28 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "interpreter.h"
-//--------------------Sys Log Queue Helper--------------------
+
+/**
+ * @brief Populates sysLogMessage with the status of the interpreter
+ *        in a human-readable format.
+ *
+ * @details This function will remove the head of the statusQueue_list
+ *          and use its contents to generate a sysLogMessage. If the
+ *          sysLogMessage would grow larger than MAX_SYSLOG_BUFFER_SIZE,
+ *          sysLogMessage is reset and a warning is added to the start
+ *          of the message.
+ */
 void sysLogQueue_populate()
 {    {
-        int8_t curIdx = statusQueue_getFirstElementIdx();
-        if (curIdx > -1 && strlen((char *)sysLogMessage)+SYSLOG_SINGLE_MESSAGE_LENGTH < MAX_SYSLOG_BUFFER_SIZE)
+        if (strlen((char *)sysLogMessage)+SYSLOG_SINGLE_MESSAGE_LENGTH < MAX_SYSLOG_BUFFER_SIZE)
         {
-            interpreter_status_t *curStatus = statusQueue[curIdx];
+            // Bring in scope struct fields and pop element
+            interpreter_status_t *curStatus = &(statusQueue_list.head->status);
             action_return_t action = curStatus->action_return;
             command_t command = curStatus->command;
             interpreter_flag_t curStatusFlag = curStatus->status;
+            statusQueue_popElement();
+
             unsigned char **args = command.parameters;
             uint8_t argsCount = command.paramsCount;
             char formattedStr[SYSLOG_SINGLE_MESSAGE_LENGTH] = {'\0'};
@@ -32,9 +44,18 @@ void sysLogQueue_populate()
                     strncat((char *)sysLogMessage, argStr, sizeof(sysLogMessage) - strlen((char *)sysLogMessage) - 1);
                 }
             }
-            statusQueue_removeSpecificElement(curStatus);
         } else {
-            statusQueue_clear();
+            // Queue is full
+            memset(sysLogMessage, 0, sizeof(sysLogMessage));
+            sysLogQueue_addMessage("--WARNING--\n\r sysLog was wiped.\n\r");
         }
+    }
+}
+
+void sysLogQueue_addMessage(char *message)
+{
+    if (strlen((char *)sysLogMessage) + strlen(message) < MAX_SYSLOG_BUFFER_SIZE)
+    {
+        strcat((char *)sysLogMessage, message);
     }
 }

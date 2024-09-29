@@ -37,7 +37,16 @@ void command_deconstructor(command_t *instance)
         }
     }
 }
-uint8_t command_isconsistent(command_t *instance)
+/**
+ * @brief      Check if the command instance is consistent
+ * @details    The command is considered consistent if:
+ *             - the root command is not empty
+ *             - the unformatted string is not empty
+ *             - the parameters are not empty and not null
+ * @param      instance The command instance to be checked
+ * @return     1 if the command is consistent, 0 otherwise
+ */
+uint8_t  command_isconsistent(command_t *instance)
 {
     uint8_t isConsistent=1;
     // Check if the root command is not empty

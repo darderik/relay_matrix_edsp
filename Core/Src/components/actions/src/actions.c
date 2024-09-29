@@ -18,6 +18,7 @@
 #include "switch_commute.h"
 
 // Here are defined all the commands and all the behaviour associated
+// Each string has a corresponding function pointer
 const command_table_entry_t command_table[] = {
     {(unsigned char *)"switch:commute", switch_commute},
     {(unsigned char *)"sys:log?", sys_log}};
