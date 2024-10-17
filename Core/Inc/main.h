@@ -60,6 +60,26 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define NCS_D_Pin GPIO_PIN_5
+#define NCS_D_GPIO_Port GPIOC
+#define NRST_A_Pin GPIO_PIN_12
+#define NRST_A_GPIO_Port GPIOB
+#define NRST_C_Pin GPIO_PIN_14
+#define NRST_C_GPIO_Port GPIOB
+#define NRST_D_Pin GPIO_PIN_6
+#define NRST_D_GPIO_Port GPIOC
+#define PS_ON_Pin GPIO_PIN_9
+#define PS_ON_GPIO_Port GPIOC
+#define NCS_B_Pin GPIO_PIN_9
+#define NCS_B_GPIO_Port GPIOA
+#define NCS_A_Pin GPIO_PIN_12
+#define NCS_A_GPIO_Port GPIOA
+#define PWR_OK_Pin GPIO_PIN_5
+#define PWR_OK_GPIO_Port GPIOB
+#define NCS_C_Pin GPIO_PIN_6
+#define NCS_C_GPIO_Port GPIOB
+#define NRST_B_Pin GPIO_PIN_9
+#define NRST_B_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
 

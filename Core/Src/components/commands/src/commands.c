@@ -1,11 +1,3 @@
-/**
- * @file      command.c
- * @brief     your file's description
- * @version   0.1
- * @date      02-09-2024
- * @copyright 2024, your company / association / school
- */
-
 #include "commands.h"
 #include <stdlib.h>
 #include <inttypes.h>   

@@ -9,7 +9,7 @@
  *        its maximum size, the command is discarded and the system is put into the FAIL state.
  * @param command The command to be added to the queue
  */
-void  ucq_addElement(unsigned char *command)
+uint8_t ucq_addElement(unsigned char *command)
 {
     // This is thread safe because only executed during a callback
     uint8_t countList = ucq_getQueueSize();
@@ -33,9 +33,13 @@ void  ucq_addElement(unsigned char *command)
     }
     else
     {
-        sysLogQueue_addMessage("--CRITICAL--\nCommand queue full,Discarding command. Debug needed.");
-        state_set(FAIL);
+        if (state_get() != FAIL)
+        {
+            sysLogQueue_addMessage("--CRITICAL--\nCommand queue full,Discarding command. Debug needed.");
+            state_set(FAIL);
+        }
     }
+    return state_get() == FAIL ? 1 : 0;
 }
 
 /**

@@ -1,11 +1,4 @@
-/**
- * @file      command.h
- * @author    Your Name (your-email@example.com)
- * @brief     your file's description
- * @version   0.1
- * @date      02-09-2024
- * @copyright 2024, your company / association / school
- */
+
 #include "config.h"
 #include <inttypes.h>
 #ifndef COMMAND_H_

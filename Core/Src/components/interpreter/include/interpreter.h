@@ -1,15 +1,6 @@
-/**
- * @file      interpreter.h
- * @author    Your Name (your-email@example.com)
- * @brief     your file's description
- * @version   0.1
- * @date      02-09-2024
- * @copyright 2024, your company / association / school
- */
-
+#include "actions.h"
 #ifndef INTERPRETER_H_
 #define INTERPRETER_H_
-#include "actions.h"
 
 // Pointer to the function associated with a root commands
 typedef enum interpreter_flag
@@ -52,7 +43,6 @@ typedef struct command_table_entry
 extern const command_table_entry_t command_table[];
 extern const char* interpreter_flag_msg[];
 void interpreter_status_deconstructor(interpreter_status_t* int_status);
-void switch_commute(interpreter_status_t *int_status);
 void sys_log(interpreter_status_t *int_status);
 void interpreter_status_constructor(interpreter_status_t* int_status);
 

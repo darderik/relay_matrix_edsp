@@ -15,5 +15,6 @@
         "callbacks.h": "c"
     },
     "cmake.sourceDirectory": "D:/OneDrive - Universita degli Studi Roma Tre/Repository/Esame/RelayMatrix/Drivers/CMSIS/NN",
-    "C_Cpp.default.compilerPath": "C:\\ProgramData\\mingw64\\mingw64\\bin\\gcc.exe"
+    "C_Cpp.default.compilerPath": "C:\\ProgramData\\mingw64\\mingw64\\bin\\gcc.exe",
+    "cortex-debug.variableUseNaturalFormat": true
 }

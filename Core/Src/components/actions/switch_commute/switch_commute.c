@@ -1,4 +1,5 @@
 #include "actions.h"
+#include "parser.h"
 #include "interpreter.h"
 #include "commands.h"
 #include "queues.h"
@@ -8,11 +9,81 @@
 #include "nanotimer.h"
 #include "fsm.h"
 #include "string.h"
+#include <stdlib.h>
 
 // SWITCH:COMMUTE --------------------------------------------------------------
+void switch_commute_handler(interpreter_status_t *int_status)
+{
+    command_t commandData = int_status->command;
+    uint8_t curIn, curOut;
+    for (uint8_t i = 0; i < commandData.paramsCount; i++)
+    {
+        //ROOT:CMD A1 B2 C3 ... D1
+        unsigned char *curParam = commandData.parameters[i];
+        curIn = (uint8_t)curParam[0] - 'a'; // Convert a-c to 0-3
+        curOut = curParam[1] - '0' - 1;     // Convert '1'-'4' to 0-3
+        if (checkParamsSelector(curIn, curOut, int_status))
+        {
+            if (checkResetStatus(&relayGroups[curIn], int_status))
+            {
+                // Maybe hash comparison?
+                if (strcicmp((char *)commandData.rootCommand, "SWITCH:COMMUTE:EXCLUSIVE") == 0)
+                {
+                    switch_commute_exclusive(int_status, curIn, curOut);
+                }
+                else if (strcicmp((char *)commandData.rootCommand, "SWITCH:COMMUTE:RESET") == 0)
+                {
+                    switch_commute_reset(int_status, curIn, curOut);
+                }
+                else if (strcicmp((char *)commandData.rootCommand, "SWITCH:COMMUTE") == 0)
+                {
+                    switch_commute(int_status, curIn, curOut);
+                }
+            }
+            else
+            {
+                // Critical: TPL failure
+                state_set(FAIL);
+            }
+        }
+        else
+        {
+            // Invalid args
+            int_status->status = INTERPRETER_INVALID_ARGS;
+        }
+    }
+}
 
-uint8_t oldByteSSR = 0;
-
+/**
+ * @brief      SWITCH:COMMUTE:RESET:ALL command. This command is used to reset all the coils
+ *             of the relay matrix. It takes no argument.
+ *
+ * @param[in]  int_status  Interpreter status structure pointer
+ *
+ * @return     None
+ */
+void switch_commute_reset_all(interpreter_status_t *int_status)
+{
+    for (size_t i = 0; i < sizeof(relayGroups) / sizeof(relay_group_t); i++)
+    {
+        relay_group_t *curGroup = &relayGroups[i];
+        if (checkResetStatus(curGroup, int_status))
+        {
+            switch (SWITCH_COMMUTE_MODE)
+            {
+            case SWITCH_SSR:
+                HAL_GPIO_WritePin(curGroup->gpio_port_nrst, curGroup->nrst_pin, GPIO_PIN_RESET);
+                waitMultiple20ns(4);
+                HAL_GPIO_WritePin(curGroup->gpio_port_nrst, curGroup->nrst_pin, GPIO_PIN_SET);
+                break;
+            case SWITCH_EMR:
+                transmitSPI(curGroup, RSTBYTE, 1);
+            default:
+                break;
+            }
+        }
+    }
+}
 /**
  * @brief      SWITCH:COMMUTE command. This command is used to activate/deactivate coils
  *             of the relay board. The command takes as argument a single string of the form
@@ -23,32 +94,21 @@ uint8_t oldByteSSR = 0;
  *
  * @return     None
  */
-void switch_commute(interpreter_status_t *int_status)
+void switch_commute(interpreter_status_t *int_status, uint8_t curIn, uint8_t curOut)
 {
-    command_t commandData = int_status->command;
-    for (uint8_t i = 0; i < commandData.paramsCount; i++)
+    relay_group_t *curGroup = &relayGroups[curIn];
+    uint8_t byteP = 0b01;
+    switch (SWITCH_COMMUTE_MODE)
     {
-        unsigned char *curParam = commandData.parameters[i];
-        uint8_t curIn, curOut;
-
-        if (checkParamsSelector(curParam, &curIn, &curOut,int_status ) && checkResetStatus(relayGroups[curIn], int_status))
-        {
-
-            relay_group_t curGroup = relayGroups[curIn];
-
-            uint8_t byteP = 0b01;
-            if (SWITCH_COMMUTE_MODE == SWITCH_EMR)
-            {
-                byteP = byteP << curOut * 2;
-                transmitSPI(&curGroup, byteP, 1);
-            }
-            else if (SWITCH_COMMUTE_MODE == SWITCH_SSR)
-            {
-                byteP = oldByteSSR | (0b01 << 2 * curOut);
-                oldByteSSR = byteP;
-                transmitSPI(&curGroup, byteP, 0);
-            }
-        }
+    case SWITCH_EMR:
+        byteP = byteP << curOut * 2;
+        transmitSPI(curGroup, byteP, 1);
+        break;
+    case SWITCH_SSR:
+        byteP = curGroup->oldByte | (0b01 << 2 * curOut);
+        curGroup->oldByte = byteP;
+        transmitSPI(curGroup, byteP, 0);
+        break;
     }
 }
 
@@ -60,38 +120,60 @@ void switch_commute(interpreter_status_t *int_status)
  *
  * @return     None
  */
-void switch_commute_exclusive(interpreter_status_t *int_status)
+void switch_commute_exclusive(interpreter_status_t *int_status, uint8_t curIn, uint8_t curOut)
 {
-    command_t commandData = int_status->command;
-    for (uint8_t i = 0; i < commandData.paramsCount; i++)
+    relay_group_t *curGroup = &relayGroups[curIn];
+    // This byte activate all reset coils of relays
+    uint8_t byteP = 0b01;
+
+    switch (SWITCH_COMMUTE_MODE)
     {
-        unsigned char *curParam = commandData.parameters[i];
-        uint8_t curIn, curOut;
-
-        if (checkParamsSelector(curParam, &curIn, &curOut,int_status) && checkResetStatus(relayGroups[curIn], int_status))
-        {
-            relay_group_t curGroup = relayGroups[curIn];
-            // This byte activate all reset coils of relays
-            uint8_t rstByte = 0b10101010;
-            uint8_t byteP = 0b01;
-
-            if (SWITCH_COMMUTE_MODE == SWITCH_EMR)
-            {
-                // If EMR, the exclusive mode translates in an OR bitwise between byteP and rstByte without a specific reset coil
-                byteP = byteP << curOut * 2;
-                byteP = byteP | (rstByte - (byteP << 1));
-                transmitSPI(&curGroup, byteP, 1);
-            }
-            else if (SWITCH_COMMUTE_MODE == SWITCH_SSR)
-            {
-                byteP = 0b01 << 2 * curOut;
-                oldByteSSR = byteP;
-                transmitSPI(&curGroup, byteP, 0);
-            }
-        }
+    case SWITCH_EMR:
+        // If EMR, the exclusive mode translates in an OR bitwise between byteP and rstByte without a specific reset coil(all the others are reset)
+        byteP = byteP << curOut * 2;
+        byteP = byteP | (RSTBYTE - (byteP << 1));
+        transmitSPI(curGroup, byteP, 1);
+        break;
+    case SWITCH_SSR:
+        byteP = 0b01 << 2 * curOut;
+        curGroup->oldByte = byteP;
+        transmitSPI(curGroup, byteP, 0);
+        break;
+    default:
+        break;
     }
 }
 
+/**
+ * @brief      SWITCH:COMMUTE:RESET command. This command is used to reset specific coils
+ *             of the relay matrix. The command takes as argument a single string of the form
+ *             "a1", "b2", "c3", "d4", where "a", "b", "c", "d" are the relay group
+ *             letters, and 1, 2, 3, 4 are the output numbers.
+ *
+ * @param[in]  int_status  Interpreter status structure pointer
+ *
+ * @return     None
+ */
+void switch_commute_reset(interpreter_status_t *int_status, uint8_t curIn, uint8_t curOut)
+{
+    relay_group_t *curGroup = &relayGroups[curIn];
+    uint8_t byteP = 0b1;
+    switch (SWITCH_COMMUTE_MODE)
+    {
+    case SWITCH_EMR:
+        byteP = byteP << (curOut * 2 + 1);
+        transmitSPI(curGroup, byteP, 1);
+        break;
+    case SWITCH_SSR:
+        byteP = byteP << curOut * 2;
+        byteP = curGroup->oldByte & ~byteP;
+        transmitSPI(curGroup, byteP, 0);
+        curGroup->oldByte = byteP;
+        break;
+    default:
+        break;
+    }
+}
 /**
  * @brief      Check the validity of the parameters for the SWITCH:COMMUTE command
  *             and convert them to the corresponding values.
@@ -103,19 +185,15 @@ void switch_commute_exclusive(interpreter_status_t *int_status)
  *
  * @return     0 if the parameters are invalid, 1 otherwise
  */
-uint8_t checkParamsSelector(unsigned char *curParam, uint8_t *curIn, uint8_t *curOut, interpreter_status_t *int_status)
+uint8_t checkParamsSelector(uint8_t curIn, uint8_t curOut, interpreter_status_t *int_status)
 {
-    uint8_t chkCond = !(curParam[0] < 'a' || curParam[0] > 'c' || curParam[1] < 1 || curParam[1] > 4);
+    uint8_t groupListSize = sizeof(relayGroups) / sizeof(relay_group_t);
+    uint8_t chkCond = (curIn >= 0 && curIn <= groupListSize && curOut >= 0 && curOut < GR_OUTCOUNT);
     // Check non negative values
-    if (chkCond)
-    {
-        *curIn = (uint8_t)curParam[0] - 'a'; // Convert a-c to 0-3
-        *curOut = (uint8_t)curParam[1] - 1;  // Convert 1-4 to 0-3
-    }
-    else
+    if (!chkCond)
     {
         int_status->action_return.status = ACTION_ERROR;
-        strcpy((char*)int_status->action_return.data, "SWITCH:COMMUTE->Invalid params");
+        strcpy((char *)int_status->action_return.data, "SWITCH:COMMUTE->Invalid params");
     }
     return chkCond;
 }
@@ -130,14 +208,13 @@ uint8_t checkParamsSelector(unsigned char *curParam, uint8_t *curIn, uint8_t *cu
  *
  * @return     0 if the relay is not powered, 1 otherwise
  */
-uint8_t checkResetStatus(relay_group_t curGroup, interpreter_status_t *int_status)
+uint8_t checkResetStatus(relay_group_t *curGroup, interpreter_status_t *int_status)
 {
-    GPIO_PinState rstStatus = configAndRead(curGroup.gpio_port_nrst, curGroup.nrst_pin);
+    GPIO_PinState rstStatus = configAndRead(curGroup->gpio_port_nrst, curGroup->nrst_pin);
     if (rstStatus == GPIO_PIN_RESET)
     {
         int_status->action_return.status = ACTION_ERROR;
-        strcpy((char*)int_status->action_return.data, "TPL9201: No Power RST 0");
-        int_status->action_return.status= ACTION_ERROR;
+        strcpy((char *)int_status->action_return.data, "TPL9201: No Power RST 0");
         return 0;
     }
     return 1;
@@ -155,9 +232,10 @@ uint8_t checkResetStatus(relay_group_t curGroup, interpreter_status_t *int_statu
  *             and then sets the NCS pin high. If isLatching is set, it waits an additional
  *             8ms for the coil to latch and then resets the RST pin.
  */
-void transmitSPI(relay_group_t* curGroup, uint8_t byteP, uint8_t isLatching)
+void transmitSPI(relay_group_t *curGroup, uint8_t byteP, uint8_t isLatching)
 {
     HAL_GPIO_WritePin(curGroup->gpio_port_ncs, curGroup->ncs_pin, GPIO_PIN_RESET);
+    waitMultiple20ns(1);
     HAL_SPI_Transmit(&hspi1, &byteP, 1, HAL_MAX_DELAY);
     waitMultiple20ns(8); // Wait for transmit delay
     HAL_GPIO_WritePin(curGroup->gpio_port_ncs, curGroup->ncs_pin, GPIO_PIN_SET);
@@ -165,6 +243,8 @@ void transmitSPI(relay_group_t* curGroup, uint8_t byteP, uint8_t isLatching)
     {
         HAL_Delay(8); // Debounce
         HAL_GPIO_WritePin(curGroup->gpio_port_nrst, curGroup->nrst_pin, GPIO_PIN_RESET);
+        waitMultiple20ns(8);
+        HAL_GPIO_WritePin(curGroup->gpio_port_nrst, curGroup->nrst_pin, GPIO_PIN_SET);
     }
 }
 

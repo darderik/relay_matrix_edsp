@@ -16,7 +16,7 @@
  */
 void sysLogQueue_populate()
 {    {
-        if (strlen((char *)sysLogMessage)+SYSLOG_SINGLE_MESSAGE_LENGTH < MAX_SYSLOG_BUFFER_SIZE)
+        if (strlen((char *)sysLogMessage)+SYSLOG_SINGLE_MESSAGE_LENGTH < MAX_SYSLOG_BUFFER_SIZE && statusQueue_getSize() > 0)
         {
             // Bring in scope struct fields and pop element
             interpreter_status_t *curStatus = &(statusQueue_list.head->status);
@@ -44,7 +44,7 @@ void sysLogQueue_populate()
                     strncat((char *)sysLogMessage, argStr, sizeof(sysLogMessage) - strlen((char *)sysLogMessage) - 1);
                 }
             }
-        } else {
+        } else if (statusQueue_getSize() > 0){
             // Queue is full
             memset(sysLogMessage, 0, sizeof(sysLogMessage));
             sysLogQueue_addMessage("--WARNING--\n\r sysLog was wiped.\n\r");

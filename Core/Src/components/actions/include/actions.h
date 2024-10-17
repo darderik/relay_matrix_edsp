@@ -1,18 +1,7 @@
-/**
- * @file      actions.h
- * @author    Your Name (your-email@example.com)
- * @brief     your file's description
- * @version   0.1
- * @date      04-09-2024
- * @copyright 2024, your company / association / school
- */
-
 #ifndef ACTIONS_H_
 #define ACTIONS_H_
 #include "commands.h"
 #include <inttypes.h>
-
-
 typedef enum action_status
 {
     ACTION_OK,
@@ -25,6 +14,12 @@ typedef struct action_return {
     unsigned char data[ACTION_DATA_MAXLENGTH];
 }  action_return_t;
 uint8_t command_table_size();
+
+#include "interpreter.h"
+//Actions prototypes
 void action_return_constructor(action_return_t *instance);
+void idn(interpreter_status_t *int_status);
+void sys_getstate(interpreter_status_t *int_status);
+
 #endif // ACTIONS_H_
 

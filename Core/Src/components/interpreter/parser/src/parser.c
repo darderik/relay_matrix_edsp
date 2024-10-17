@@ -1,50 +1,44 @@
 #include "parser.h"
-
+#include <string.h>
 /**
  * @brief Initializes a command instance by parsing the command string into root and arguments.
  *
- * @param instance The command instance to be initialized.
- * @param cmdString The command string to be parsed.
+ * @param[out] instance The command instance to be initialized.
+ * @param[in] cmdString The command string to be parsed.
  */
 void parseCommand(command_t *instance, unsigned char *cmdString)
 {
-    size_t rootSize = 0;
-    unsigned char *cleanedCmdString = cleanCmd(cmdString);
+    size_t rootLength = 0;
+    unsigned char *cleanedCommand = cleanCmd(cmdString);
+    size_t commandLength = strlen((char *)cleanedCommand);
 
-    if (!preParseCommand(cleanedCmdString))
+    if (commandLength == 0)
     {
         return;
     }
 
     // Identify root command (e.g., THIS:IS:ROOT arg1 arg2)
-    while (cleanedCmdString[rootSize] != ' ' && cleanedCmdString[rootSize] != '\0')
-    {
-        rootSize++;
-    }
-
-    instance->rootCommand = strndup((const char *)cleanedCmdString, rootSize);
-    instance->unformattedString = cleanedCmdString;
+    // Note, memchr returns pointer to char, cleanedCommand ptr gets subtracted to rootEnd(first space) and you get length
+    unsigned char *rootEnd = (unsigned char *)memchr(cleanedCommand, ' ', commandLength);
+    rootLength = rootEnd != NULL ? rootEnd - cleanedCommand : commandLength;
+    instance->rootCommand = (unsigned char *)strndup((const char *)cleanedCommand, rootLength);
+    instance->unformattedString = cleanedCommand;
 
     // Check if there are any arguments
-    if (cleanedCmdString[rootSize] != '\0')
+    if (rootLength < commandLength)
     {
-        size_t curArgStart = rootSize + 1; // Start from the first character of the argument, skip a space
-        size_t argsCount = 0;
-        size_t offset = 0;
+        size_t argumentStart = rootLength + 1; // Start from the first character of the argument, skip a space
+        size_t argumentCount = 0;
 
-        while (cleanedCmdString[curArgStart + offset] != '\0')
+        while (argumentStart < commandLength)
         {
-            size_t curArgLength = 0;
-            while (cleanedCmdString[curArgStart + offset + curArgLength] != ' ' && cleanedCmdString[curArgStart + offset + curArgLength] != '\0')
-            {
-                curArgLength++;
-            }
-
-            instance->parameters[argsCount] = strndup((const char *)(cleanedCmdString + curArgStart + offset), curArgLength);
-            offset += curArgLength + 1;
-            argsCount++;
+            unsigned char *argumentEnd = (unsigned char *)memchr(cleanedCommand + argumentStart, ' ', commandLength - argumentStart);
+            size_t argumentLength = argumentEnd == NULL ? commandLength - argumentStart : argumentEnd - (cleanedCommand + argumentStart);
+            instance->parameters[argumentCount] = (unsigned char *)strndup((const char *)(cleanedCommand + argumentStart), argumentLength);
+            argumentStart += argumentLength + 1;
+            argumentCount++;
         }
-        instance->paramsCount = argsCount < MAX_PARAMS ? argsCount : MAX_PARAMS;
+        instance->paramsCount = argumentCount < MAX_PARAMS ? argumentCount : MAX_PARAMS;
     }
 }
 uint8_t preParseCommand(unsigned char *cleanedString)
@@ -59,7 +53,7 @@ uint8_t preParseCommand(unsigned char *cleanedString)
  * @param command_string The original command string.
  * @return char* The cleaned command string.
  */
-unsigned char *clean_command_string(unsigned char *command_string)
+unsigned char *cleanCmd(unsigned char *command_string)
 {
     size_t command_length = strlen((char *)command_string);
     unsigned char *cleaned_string = malloc(command_length + 1);
@@ -112,7 +106,8 @@ uint8_t count_white_spaces(unsigned char *string, uint8_t string_length)
     uint8_t i;
 
     // Find the last non-space character
-    for (i = string_length - 1; i != 0 && isspace(string[i]); i--);
+    for (i = string_length - 1; i != 0 && isspace(string[i]); i--)
+        ;
 
     // Count spaces up to the last non-space character
     for (uint8_t j = 0; j < i; j++)
@@ -170,7 +165,6 @@ int8_t grabLastChar(unsigned char *string, uint8_t string_length)
 
     return last_char_pos;
 }
-
 
 /**
  * @brief Identifies the index of the last occurrence of a specific character in a string.
@@ -245,27 +239,6 @@ uint8_t findLastNonSpaceChar(const unsigned char *string, uint8_t offset, uint8_
     return lastIndex;
 }
 
-/**
- * @brief Finds the first occurrence of a specific character in a string, starting from a given offset.
- *
- * @param str The string to be analyzed.
- * @param key The character to find.
- * @param ofs The offset to start from.
- * @param sizeStr The length of the string.
- * @return int8_t The index of the first occurrence of the character, or -1 if not found.
- */
-int8_t findFirstChar(unsigned char *str, unsigned char key, uint8_t ofs, uint8_t sizeStr)
-{
-    for (uint8_t i = ofs; i < sizeStr; i++)
-    {
-        unsigned char curChar = str[i];
-        if (curChar == key)
-        {
-            return i;
-        }
-    }
-    return -1; // Character not found
-}
 void strTolower(char *str)
 {
     for (; *str; ++str)

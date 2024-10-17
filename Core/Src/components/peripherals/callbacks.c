@@ -20,11 +20,21 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
             case '\n':
             case '\r':
                 // End of command
+                // Move buffer to queue
+                rx_buffer[inProgress] = '\0';
+                uint8_t error = ucq_addElement(rx_buffer);
+                if (error)
+                {
+                    // Queue is probably full
+                    HAL_UART_Transmit(huart, (unsigned char *)"\r\nCRIT:Queue full\r\n", 15, HAL_MAX_DELAY);
+                }
+                else
+                {
+                    HAL_UART_Transmit(huart, (unsigned char *)"\r\nOK|CTS|\r\n", 6, HAL_MAX_DELAY);
+                }
+                HAL_UART_Transmit(huart, (unsigned char *)"\r\n", 2, HAL_MAX_DELAY);
                 inProgress = 0;
                 lastTick = 0;
-                // Move buffer to queue
-                ucq_addElement(rx_buffer);
-                HAL_UART_Transmit(huart, (unsigned char *)"\r\n", 2, HAL_MAX_DELAY);
                 break;
             case 127:
                 // Backspace
@@ -67,8 +77,16 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
     {
         // WE HavE received a string,add to ucq (if there is space)
         rx_buffer[Size] = '\0';
-        ucq_addElement(rx_buffer);
+        uint8_t error = ucq_addElement(rx_buffer);
+        if (error)
+        {
+            // Queue is probably full
+            HAL_UART_Transmit(huart, (unsigned char *)"\r\n|CRIT||Queue Full\r\n", 22, HAL_MAX_DELAY);
+        }
+        else
+        {
+            HAL_UART_Transmit(huart, (unsigned char *)"|CTS|", 6, HAL_MAX_DELAY);
+        }
     }
-    HAL_UART_Transmit(huart, (unsigned char *)"|CTS|", 6, HAL_MAX_DELAY);
     HAL_UARTEx_ReceiveToIdle_DMA(huart, rx_buffer, MAX_COMMAND_LENGTH);
 }

@@ -15,7 +15,7 @@ state_t state = INIT;
  *        according to the current state and the events that occur.
  *
  *        @param huart Pointer to a UART_HandleTypeDef structure
- *        @param hspi Pointer to a SPI_HandleTypeDef structure 
+ *        @param hspi Pointer to a SPI_HandleTypeDef structure
  */
 void state_handler(UART_HandleTypeDef *huart, SPI_HandleTypeDef *hspi)
 {
@@ -24,25 +24,29 @@ void state_handler(UART_HandleTypeDef *huart, SPI_HandleTypeDef *hspi)
     case INIT:
         // Turn on PSU by pulling down PC9
         HAL_GPIO_WritePin(PS_ON_GPIO, PS_ON_PIN, GPIO_PIN_RESET);
-        // HAL_Delay(PSU_TURNON_TIMEOUT); // 600ms for psu stabilization, or PB5 PWR_OK
-        if (!waitForPin(PWR_OK_GPIO, PWR_OK_PIN,400))
+        if (PSU_CHECK_MODE == PSU_TIMEOUT)
         {
-            // PWR_OK Not reached, fail state
-            sysLogQueue_addMessage("\n\rPWR_OK not reached. Debug needed.\n\r");
-            state_set(FAIL);
+            HAL_Delay(PSU_TURNON_TIMEOUT); // 600ms for psu stabilization, or PB5 PWR_OK
         }
         else
         {
-            if (QUEUE_MODE == CPU)
+            if (!waitForPin(PWR_OK_GPIO, PWR_OK_PIN, PSU_TURNON_TIMEOUT))
             {
-                HAL_UART_Receive_IT(huart, &rx_data_ptr, 1);
+                // PWR_OK Not reached, fail state
+                sysLogQueue_addMessage("\n\rPWR_OK not reached. Debug needed.\n\r");
+                state_set(FAIL);
+                break;
             }
-            else
-            {
-                HAL_UARTEx_ReceiveToIdle_DMA(huart, rx_buffer, MAX_COMMAND_LENGTH);
-            }
-            state_set(IDLE);
         }
+        if (QUEUE_MODE == CPU)
+        {
+            HAL_UART_Receive_IT(huart, &rx_data_ptr, 1);
+        }
+        else
+        {
+            HAL_UARTEx_ReceiveToIdle_DMA(huart, rx_buffer, MAX_COMMAND_LENGTH);
+        }
+        state_set(IDLE);
         break;
 
     case IDLE:
@@ -108,6 +112,10 @@ void state_handler(UART_HandleTypeDef *huart, SPI_HandleTypeDef *hspi)
 state_t state_get()
 {
     return state;
+}
+void state_get_label(char* formattedStr) {
+    static char* labels[] = {"INIT", "IDLE", "INTERPRET", "LOG", "FAIL", "PASSIVE"};
+    strcpy(formattedStr, labels[state]);
 }
 void state_set(state_t newState)
 {

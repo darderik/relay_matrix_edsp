@@ -57,7 +57,7 @@ extern interpreter_status_list_container_t statusQueue_list;
 extern unsigned char sysLogMessage[MAX_SYSLOG_BUFFER_SIZE];
 
 //---Unparsed Command Queue Helper---
-void ucq_addElement(unsigned char *command);
+uint8_t ucq_addElement(unsigned char *command);
 uint8_t ucq_removeElement(unsigned char *keyCommand);
 uint8_t ucq_getQueueSize();
 void ucq_popElement();

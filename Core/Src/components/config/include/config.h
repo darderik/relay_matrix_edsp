@@ -6,12 +6,14 @@
 // Flags
 #define DMA 0
 #define CPU 1
-
+#define PSU_PWROK 0
+#define PSU_TIMEOUT 1
 // System settings
 #define MAX_COMMAND_LENGTH 128
 #define MAX_TIMEOUT_MINUTES 3
 #define PSU_TURNON_TIMEOUT 600
-#define QUEUE_MODE DMA
+#define PSU_CHECK_MODE PSU_TIMEOUT
+#define QUEUE_MODE CPU
 
 // Queues
 #define MAX_COMMAND_QUEUE_SIZE 8
@@ -29,7 +31,7 @@
  // Switch commute
 #define SWITCH_EMR 0
 #define SWITCH_SSR 1
-#define SWITCH_COMMUTE_MODE SWITCH_EMR
+#define SWITCH_COMMUTE_MODE SWITCH_SSR
 
 /**
  * @struct relay_group_t
@@ -49,8 +51,9 @@ typedef struct
     GPIO_TypeDef *gpio_port_nrst;
     uint16_t ncs_pin;
     uint16_t nrst_pin;
+    uint8_t oldByte;
 } relay_group_t;
-extern const relay_group_t relayGroups[4];
+extern relay_group_t relayGroups[4];
 
 void config_set_uart_mode(uint8_t mode);
 #endif // CONFIG_H_
