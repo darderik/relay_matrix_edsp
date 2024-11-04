@@ -15,8 +15,9 @@
  *          of the message.
  */
 void sysLogQueue_populate()
-{    {
-        if (strlen((char *)sysLogMessage)+SYSLOG_SINGLE_MESSAGE_LENGTH < MAX_SYSLOG_BUFFER_SIZE && statusQueue_getSize() > 0)
+{
+    {
+        if (strlen((char *)sysLogMessage) + SYSLOG_SINGLE_MESSAGE_LENGTH < MAX_SYSLOG_BUFFER_SIZE && statusQueue_getSize() > 0)
         {
             // Bring in scope struct fields and pop element
             interpreter_status_t *curStatus = &(statusQueue_list.head->status);
@@ -29,9 +30,10 @@ void sysLogQueue_populate()
             uint8_t argsCount = command.paramsCount;
             char formattedStr[SYSLOG_SINGLE_MESSAGE_LENGTH] = {'\0'};
             snprintf(formattedStr, sizeof(formattedStr),
-                     "\r\n ---COMMAND DIAGNOSTIC--- \n\r"
-                     "Command: %s Status: %d 0->ok, Interpreter Status: %s,Message: %s"
-                     " \n\r Args:",
+                     "---COMMAND DIAGNOSTIC--- \n\r"
+                     "Command: %s Status: %d, Interpreter Status: %s,\n\r "
+                     "Message: %s \n\r"
+                     "Args:\n\r",
                      command.rootCommand, action.status, interpreter_flag_msg[curStatusFlag], action.data);
             if (strlen((char *)sysLogMessage) + strlen(formattedStr) < MAX_SYSLOG_BUFFER_SIZE)
             {
@@ -40,11 +42,13 @@ void sysLogQueue_populate()
                 {
                     char *curArg = (char *)args[j];
                     char argStr[64];
-                    snprintf(argStr, sizeof(argStr), "\n\r ---> Arg %d: %s \n\r", j, curArg);
+                    snprintf(argStr, sizeof(argStr), "---> Arg %d: %s \n\r", j, curArg);
                     strncat((char *)sysLogMessage, argStr, sizeof(sysLogMessage) - strlen((char *)sysLogMessage) - 1);
                 }
             }
-        } else if (statusQueue_getSize() > 0){
+        }
+        else if (statusQueue_getSize() > 0)
+        {
             // Queue is full
             memset(sysLogMessage, 0, sizeof(sysLogMessage));
             sysLogQueue_addMessage("--WARNING--\n\r sysLog was wiped.\n\r");

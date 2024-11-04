@@ -5,8 +5,8 @@
 #include "queues.h"
 #include "callbacks.h"
 
-uint8_t inProgress = 0;
-uint32_t lastTick = 0;
+static uint16_t inProgress;
+static uint32_t lastTick;
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
@@ -26,11 +26,11 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
                 if (error)
                 {
                     // Queue is probably full
-                    HAL_UART_Transmit(huart, (unsigned char *)"\r\nCRIT:Queue full\r\n", 15, HAL_MAX_DELAY);
+                    HAL_UART_Transmit(huart, (unsigned char *)"CRIT:Queue full\r\n", 15, HAL_MAX_DELAY);
                 }
                 else
                 {
-                    HAL_UART_Transmit(huart, (unsigned char *)"\r\nOK|CTS|\r\n", 6, HAL_MAX_DELAY);
+                    HAL_UART_Transmit(huart, (unsigned char *)"OK|CTS|\r\n", 12, HAL_MAX_DELAY);
                 }
                 HAL_UART_Transmit(huart, (unsigned char *)"\r\n", 2, HAL_MAX_DELAY);
                 inProgress = 0;
@@ -81,11 +81,11 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
         if (error)
         {
             // Queue is probably full
-            HAL_UART_Transmit(huart, (unsigned char *)"\r\n|CRIT||Queue Full\r\n", 22, HAL_MAX_DELAY);
+            HAL_UART_Transmit(huart, (unsigned char *)"|CRIT||Queue Full\r\n", 22, HAL_MAX_DELAY);
         }
         else
         {
-            HAL_UART_Transmit(huart, (unsigned char *)"|CTS|", 6, HAL_MAX_DELAY);
+            HAL_UART_Transmit(huart, (unsigned char *)"|CTS|\r\n", 7, HAL_MAX_DELAY);
         }
     }
     HAL_UARTEx_ReceiveToIdle_DMA(huart, rx_buffer, MAX_COMMAND_LENGTH);

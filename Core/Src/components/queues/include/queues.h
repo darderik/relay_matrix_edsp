@@ -45,7 +45,12 @@ typedef struct interpreter_status_entry {
     interpreter_status_t status;
     struct interpreter_status_entry* next;
 } interpreter_status_entry_t;
-
+/**
+ * @brief Structure used to store a linked list of interpreter statuses
+ *
+ * @param head       The first element in the list
+ * @param tail       The last element in the list
+ */
 typedef struct interpreter_status_list_container {
     interpreter_status_entry_t* head;
     interpreter_status_entry_t* tail;

@@ -10,6 +10,7 @@
 void interpreter_status_deconstructor(interpreter_status_t* int_status) {
     if (int_status != NULL) {
         command_deconstructor(&(int_status->command));
+        action_return_deconstructor(&(int_status->action_return));
         free(int_status);
     }
 }

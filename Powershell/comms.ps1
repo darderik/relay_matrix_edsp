@@ -13,23 +13,32 @@ function openComPort {
     return $port
 }
 $CommandList = @(
-    "test:cmd:1 ok ok",
-    "test:cmd:2 ok ok",
-    "test:cmd:3 ok ok"
+    "switch:commute:reset:all",
+    "switch:commute c3",
+    "switch:commute d4",
+    "switch:commute:reset c3",
+    "switch:commute:reset d4",
+    "switch:commute c4",
+    "switch:commute d3"
 )
 #Setup della COM3
 #Baudrate = 9600, Terminator: \r\n, Encoding: ASCII, Databits: 8, Parity: None, Stopbits: 1
-[System.IO.Ports.SerialPort] $SerialPort = openComPort 3 9600
+[System.IO.Ports.SerialPort] $SerialPort = openComPort 3 115200
 $SerialPort.Encoding = [System.Text.Encoding]::ASCII
+    
 
 try {
-    foreach ($cmd in $CommandList) {
-        $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
-        $SerialPort.WriteLine($cmd)
-        while (-not $SerialPort.ReadExisting() -contains "|CTS|") {}
-        $stopwatch.Stop()
-        Write-Host "Tempo trascorso: $($stopwatch.Elapsed.TotalMilliseconds) ms"
-        #Received CTS
+    while ($true) {
+
+        foreach ($cmd in $CommandList) {
+            $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
+            $SerialPort.WriteLine($cmd)
+            while (-not $SerialPort.ReadExisting() -contains "|CTS|") {}
+            $stopwatch.Stop()
+            Write-Host "Tempo trascorso: $($stopwatch.Elapsed.TotalMilliseconds) ms"
+            Start-Sleep -Milliseconds 700
+            #Received CTS
+        }
     }
 }
 finally {

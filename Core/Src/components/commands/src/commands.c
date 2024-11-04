@@ -1,6 +1,6 @@
 #include "commands.h"
 #include <stdlib.h>
-#include <inttypes.h>   
+#include <inttypes.h>
 #include "parser.h"
 
 void command_constructor(command_t *instance)
@@ -22,11 +22,8 @@ void command_deconstructor(command_t *instance)
     free(instance->unformattedString);
     // Free the parameters
     for (int i = 0; i < MAX_PARAMS; i++)
-    { 
-        if (instance->parameters[i] != NULL)
-        {
-            free(instance->parameters[i]);
-        }
+    {
+        free(instance->parameters[i]);
     }
 }
 /**
@@ -38,27 +35,27 @@ void command_deconstructor(command_t *instance)
  * @param      instance The command instance to be checked
  * @return     1 if the command is consistent, 0 otherwise
  */
-uint8_t  command_isconsistent(command_t *instance)
+uint8_t command_isconsistent(command_t *instance)
 {
-    uint8_t isConsistent=1;
+    uint8_t isConsistent = 1;
     // Check if the root command is not empty
-    if (strlen((char*)(instance->rootCommand)) == 0 || grabLastChar(instance->rootCommand, strlen((char*)(instance->rootCommand))) == -1)
+    if (strlen((char *)(instance->rootCommand)) == 0 || grabLastChar(instance->rootCommand, strlen((char *)(instance->rootCommand))) == -1)
     {
-        isConsistent=0;
+        isConsistent = 0;
     }
     // Check if the unformatted string is not empty
-    if (strlen((char*)instance->unformattedString) == 0 || grabLastChar(instance->unformattedString, strlen((char*)instance->unformattedString)) == -1)
+    if (strlen((char *)instance->unformattedString) == 0 || grabLastChar(instance->unformattedString, strlen((char *)instance->unformattedString)) == -1)
     {
-        isConsistent=0;
+        isConsistent = 0;
     }
     // Check if the parameters are consistent
     for (int i = 0; i < instance->paramsCount; i++)
     {
         if (instance->parameters[i] != NULL)
         {
-            if (strlen((char*)instance->parameters[i]) == 0)
+            if (strlen((char *)instance->parameters[i]) == 0)
             {
-                isConsistent=0;
+                isConsistent = 0;
                 break;
             }
         }

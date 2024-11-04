@@ -33,7 +33,7 @@ void state_handler(UART_HandleTypeDef *huart, SPI_HandleTypeDef *hspi)
             if (!waitForPin(PWR_OK_GPIO, PWR_OK_PIN, PSU_TURNON_TIMEOUT))
             {
                 // PWR_OK Not reached, fail state
-                sysLogQueue_addMessage("\n\rPWR_OK not reached. Debug needed.\n\r");
+                sysLogQueue_addMessage("PWR_OK not reached. Debug needed.\n\r");
                 state_set(FAIL);
                 break;
             }

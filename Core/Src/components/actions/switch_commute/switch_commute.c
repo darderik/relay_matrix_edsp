@@ -18,7 +18,7 @@ void switch_commute_handler(interpreter_status_t *int_status)
     uint8_t curIn, curOut;
     for (uint8_t i = 0; i < commandData.paramsCount; i++)
     {
-        //ROOT:CMD A1 B2 C3 ... D1
+        // ROOT:CMD A1 B2 C3 ... D1
         unsigned char *curParam = commandData.parameters[i];
         curIn = (uint8_t)curParam[0] - 'a'; // Convert a-c to 0-3
         curOut = curParam[1] - '0' - 1;     // Convert '1'-'4' to 0-3
@@ -78,6 +78,7 @@ void switch_commute_reset_all(interpreter_status_t *int_status)
                 break;
             case SWITCH_EMR:
                 transmitSPI(curGroup, RSTBYTE, 1);
+                HAL_Delay(8);
             default:
                 break;
             }
@@ -192,7 +193,7 @@ uint8_t checkParamsSelector(uint8_t curIn, uint8_t curOut, interpreter_status_t 
     // Check non negative values
     if (!chkCond)
     {
-        int_status->action_return.status = ACTION_ERROR;
+        int_status->action_return.status = ACTION_INVALID_ARGS;
         strcpy((char *)int_status->action_return.data, "SWITCH:COMMUTE->Invalid params");
     }
     return chkCond;
@@ -214,7 +215,10 @@ uint8_t checkResetStatus(relay_group_t *curGroup, interpreter_status_t *int_stat
     if (rstStatus == GPIO_PIN_RESET)
     {
         int_status->action_return.status = ACTION_ERROR;
-        strcpy((char *)int_status->action_return.data, "TPL9201: No Power RST 0");
+        char* msg = "TPL9201: No Power RST 0\r\n";
+        strcpy((char *)int_status->action_return.data, msg );
+        action_return_addMessage(&(int_status->action_return), msg);
+        int_status->action_return.toTransmit = 1;
         return 0;
     }
     return 1;
@@ -235,15 +239,15 @@ uint8_t checkResetStatus(relay_group_t *curGroup, interpreter_status_t *int_stat
 void transmitSPI(relay_group_t *curGroup, uint8_t byteP, uint8_t isLatching)
 {
     HAL_GPIO_WritePin(curGroup->gpio_port_ncs, curGroup->ncs_pin, GPIO_PIN_RESET);
-    waitMultiple20ns(1);
+    HAL_Delay(50); //Da rivedere
     HAL_SPI_Transmit(&hspi1, &byteP, 1, HAL_MAX_DELAY);
-    waitMultiple20ns(8); // Wait for transmit delay
+    HAL_Delay(50); // Wait for transmit delay
     HAL_GPIO_WritePin(curGroup->gpio_port_ncs, curGroup->ncs_pin, GPIO_PIN_SET);
     if (isLatching)
     {
-        HAL_Delay(8); // Debounce
+        HAL_Delay(30); // Debounce
         HAL_GPIO_WritePin(curGroup->gpio_port_nrst, curGroup->nrst_pin, GPIO_PIN_RESET);
-        waitMultiple20ns(8);
+        waitMultiple20ns(12);
         HAL_GPIO_WritePin(curGroup->gpio_port_nrst, curGroup->nrst_pin, GPIO_PIN_SET);
     }
 }
