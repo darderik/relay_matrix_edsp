@@ -65,6 +65,7 @@ void state_handler(UART_HandleTypeDef *huart, SPI_HandleTypeDef *hspi)
         if (unparsed_list.head != NULL)
         {
             interpreter_status_t int_status;
+            interpreter_status_constructor(&int_status);
             interpretAndExecuteCommand(&int_status);
             statusQueue_addElement(&int_status);
             if (int_status.action_return.status == ACTION_ERROR)

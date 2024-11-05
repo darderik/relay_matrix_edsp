@@ -35,11 +35,11 @@ uint8_t ucq_addElement(unsigned char *command)
     {
         if (state_get() != FAIL)
         {
-            sysLogQueue_addMessage("--CRITICAL--\nCommand queue full,Discarding command. Debug needed.");
-            state_set(FAIL);
+            sysLogQueue_addMessage("--CRITICAL--\nCommand queue full,executing queued commands.");
+            state_set(INTERPRET);
         }
     }
-    return state_get() == FAIL ? 1 : 0;
+    return countList>=MAX_COMMAND_QUEUE_SIZE ? 1 : 0;
 }
 
 /**

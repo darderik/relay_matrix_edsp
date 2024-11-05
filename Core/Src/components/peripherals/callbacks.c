@@ -26,11 +26,11 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
                 if (error)
                 {
                     // Queue is probably full
-                    HAL_UART_Transmit(huart, (unsigned char *)"CRIT:Queue full\r\n", 15, HAL_MAX_DELAY);
+                    HAL_UART_Transmit(huart, (unsigned char *)"\r\nCRIT:Queue full", 15, HAL_MAX_DELAY);
                 }
                 else
                 {
-                    HAL_UART_Transmit(huart, (unsigned char *)"OK|CTS|\r\n", 12, HAL_MAX_DELAY);
+                    HAL_UART_Transmit(huart, (unsigned char *)"\r\nOK|CTS|", 12, HAL_MAX_DELAY);
                 }
                 HAL_UART_Transmit(huart, (unsigned char *)"\r\n", 2, HAL_MAX_DELAY);
                 inProgress = 0;
@@ -51,7 +51,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
                 rx_buffer[inProgress++] = curChar;
                 // Verify timeout
                 uint32_t curTick = HAL_GetTick();
-                if (curTick - lastTick > 1000 * 60 * MAX_TIMEOUT_MINUTES)
+                if (curTick - lastTick > 1000 * 60 * MAX_TIMEOUT_MINUTES && lastTick)
                 {
                     // Flush everything
                     inProgress = 0;

@@ -24,8 +24,11 @@ void interpretAndExecuteCommand(interpreter_status_t *int_status)
 
     // Parse first command from list of unparsed commands
     command_t *curCommandPtr = &(int_status->command);
-    interpreter_status_constructor(int_status);
-    parseCommand(curCommandPtr, unparsed_list.head->command);
+    
+    // Call command constructor here so we can pop an element
+    uint8_t* curUnformatted = unparsed_list.head->command;
+    command_constructor(curCommandPtr, curUnformatted);
+
     ucq_popElement();
 
     // Do all checks on instance of command

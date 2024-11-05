@@ -6,6 +6,7 @@ void action_return_constructor(action_return_t *instance)
 {
     instance->status = ACTION_OK;
     memset(instance->data, '\0', ACTION_DATA_MAXLENGTH);
+    instance->toTransmit = 0;
 }
 void action_return_addMessage(action_return_t *instance, char *message) {
     instance->toTransmit = 1;

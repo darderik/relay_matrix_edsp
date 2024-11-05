@@ -239,20 +239,20 @@ uint8_t checkResetStatus(relay_group_t *curGroup, interpreter_status_t *int_stat
 void transmitSPI(relay_group_t *curGroup, uint8_t byteP, uint8_t isLatching)
 {
     HAL_GPIO_WritePin(curGroup->gpio_port_ncs, curGroup->ncs_pin, GPIO_PIN_RESET);
-    HAL_Delay(50); //Da rivedere
+    HAL_Delay(1); // Non compliance with tpl9201 datasheet
     HAL_SPI_Transmit(&hspi1, &byteP, 1, HAL_MAX_DELAY);
-    HAL_Delay(50); // Wait for transmit delay
+    HAL_Delay(1); // Wait for transmit delay
     HAL_GPIO_WritePin(curGroup->gpio_port_ncs, curGroup->ncs_pin, GPIO_PIN_SET);
     if (isLatching)
     {
-        HAL_Delay(30); // Debounce
+        HAL_Delay(12); // Debounce
         HAL_GPIO_WritePin(curGroup->gpio_port_nrst, curGroup->nrst_pin, GPIO_PIN_RESET);
-        waitMultiple20ns(12);
+        HAL_Delay(1);
         HAL_GPIO_WritePin(curGroup->gpio_port_nrst, curGroup->nrst_pin, GPIO_PIN_SET);
     }
 }
 
-GPIO_PinState configAndRead(GPIO_TypeDef *GPIOx, uint16_t Pin)
+GPIO_PinState  configAndRead(GPIO_TypeDef *GPIOx, uint16_t Pin)
 {
     HAL_GPIO_WritePin(GPIOx, Pin, GPIO_PIN_SET); // H-Z
     waitMultiple20ns(10);
