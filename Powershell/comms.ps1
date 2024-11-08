@@ -34,10 +34,10 @@ try {
             $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
             $SerialPort.WriteLine($cmd)
             while (-not $SerialPort.ReadExisting() -contains "|CTS|") {}
+            # Received CTS
             $stopwatch.Stop()
             Write-Host "Tempo trascorso: $($stopwatch.Elapsed.TotalMilliseconds) ms"
-            Start-Sleep -Milliseconds 700
-            #Received CTS
+            Start-Sleep -Milliseconds 100
         }
     }
 }

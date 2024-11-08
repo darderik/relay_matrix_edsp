@@ -1,7 +1,7 @@
 #include "fsm.h"
 #include "main.h"
 #include "config.h"
-#include "commands.h"
+#include "command.h"
 #include "parser.h"
 #include "queues.h"
 #include "interpreter.h"
@@ -38,6 +38,7 @@ void state_handler(UART_HandleTypeDef *huart, SPI_HandleTypeDef *hspi)
                 break;
             }
         }
+        // Choose queue mode
         if (QUEUE_MODE == CPU)
         {
             HAL_UART_Receive_IT(huart, &rx_data_ptr, 1);
@@ -50,6 +51,7 @@ void state_handler(UART_HandleTypeDef *huart, SPI_HandleTypeDef *hspi)
         break;
 
     case IDLE:
+        // Switch to interpret state if there is a command
         if (unparsed_list.head != NULL)
         {
             // Command received
@@ -73,7 +75,7 @@ void state_handler(UART_HandleTypeDef *huart, SPI_HandleTypeDef *hspi)
                 state_set(FAIL);
             }
         }
-        else
+        else if (statusQueue_getSize() != 0)
         {
             state_set(IDLE);
         }
@@ -90,7 +92,7 @@ void state_handler(UART_HandleTypeDef *huart, SPI_HandleTypeDef *hspi)
         }
         else
         {
-            HAL_Delay(100);
+            HAL_Delay(5);
         }
         break;
     case FAIL:
@@ -102,7 +104,7 @@ void state_handler(UART_HandleTypeDef *huart, SPI_HandleTypeDef *hspi)
         }
         else
         {
-            HAL_Delay(100);
+            HAL_Delay(5);
         }
         break;
 
@@ -114,8 +116,9 @@ state_t state_get()
 {
     return state;
 }
-void state_get_label(char* formattedStr) {
-    static char* labels[] = {"INIT", "IDLE", "INTERPRET", "LOG", "FAIL", "PASSIVE"};
+void state_get_label(char *formattedStr)
+{
+    static char *labels[] = {"INIT", "IDLE", "INTERPRET", "LOG", "FAIL", "PASSIVE"};
     strcpy(formattedStr, labels[state]);
 }
 void state_set(state_t newState)

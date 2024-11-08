@@ -8,7 +8,7 @@
 #include "parser.h"
 #include "interpreter.h"
 #include "queues.h"
-#include "commands.h"
+#include "command.h"
 #include "main.h"
 const char *interpreter_flag_msg[] = {"OK", "INVALID COMMAND", "INVALID ARGS"};
 

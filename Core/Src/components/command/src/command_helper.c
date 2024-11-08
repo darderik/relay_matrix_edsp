@@ -1,4 +1,4 @@
-#include "commands.h"
+#include "command.h"
 #include <stdlib.h>
 #include <inttypes.h>
 #include "parser.h"

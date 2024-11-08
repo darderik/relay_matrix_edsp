@@ -16,7 +16,7 @@
 			"config.h": "c",
 			"main.h": "c",
 			"fsm.h": "c",
-			"commands.h": "c",
+			"command.h": "c",
 			"interpreter.h": "c",
 			"actions.h": "c",
 			"queues.h": "c",

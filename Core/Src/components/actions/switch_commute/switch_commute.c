@@ -1,7 +1,7 @@
 #include "actions.h"
 #include "parser.h"
 #include "interpreter.h"
-#include "commands.h"
+#include "command.h"
 #include "queues.h"
 #include "config.h"
 #include "main.h"
@@ -245,7 +245,7 @@ void transmitSPI(relay_group_t *curGroup, uint8_t byteP, uint8_t isLatching)
     HAL_GPIO_WritePin(curGroup->gpio_port_ncs, curGroup->ncs_pin, GPIO_PIN_SET);
     if (isLatching)
     {
-        HAL_Delay(12); // Debounce
+        HAL_Delay(12); // Debounce, HFD2-012-S-L2 Datasheet
         HAL_GPIO_WritePin(curGroup->gpio_port_nrst, curGroup->nrst_pin, GPIO_PIN_RESET);
         HAL_Delay(1);
         HAL_GPIO_WritePin(curGroup->gpio_port_nrst, curGroup->nrst_pin, GPIO_PIN_SET);

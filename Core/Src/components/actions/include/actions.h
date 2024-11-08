@@ -1,6 +1,6 @@
 #ifndef ACTIONS_H_
 #define ACTIONS_H_
-#include "commands.h"
+#include "command.h"
 #include <inttypes.h>
 typedef enum action_status
 {

@@ -10,7 +10,7 @@
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "commands.h"    
+#include "command.h"    
 #ifndef PARSER_H_
 #define PARSER_H_
 void splitString(unsigned char *string2Split);

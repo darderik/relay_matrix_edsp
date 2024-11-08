@@ -2,7 +2,7 @@
 #include "actions.h"
 #include "fsm.h"
 #include "interpreter.h"
-#include "commands.h"
+#include "command.h"
 #include "queues.h"
 #include "main.h"
 #include <stdio.h>
