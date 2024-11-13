@@ -18,8 +18,7 @@ const command_table_entry_t command_table[] = {
     {(unsigned char *)"switch:commute:exclusive", switch_commute_handler},
     {(unsigned char *)"switch:commute:reset", switch_commute_handler},
     {(unsigned char *)"switch:commute:reset:all", switch_commute_reset_all},
-    {(unsigned char *)"*IDN?", idn}, // IDN Command
-    
+    {(unsigned char *)"*IDN?", idn} // IDN Command
     //,{(unsigned char *)"help?", help }
 };
 uint8_t command_table_size()
