@@ -1,10 +1,3 @@
-/**
- * @file      interpreter.c
- * @brief     Interpreter for executing commands
- * @version   0.1
- * @date      02-09-2024
- */
-
 #include "parser.h"
 #include "interpreter.h"
 #include "queues.h"

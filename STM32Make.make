@@ -36,21 +36,21 @@ BUILD_DIR = build
 ######################################
 # C sources
 C_SOURCES =  \
-Core/Src/components/actions/src/actions.c \
-Core/Src/components/actions/src/actions_helper.c \
+Core/Src/components/actions/actions.c \
+Core/Src/components/actions/actions_helper.c \
 Core/Src/components/actions/switch_commute/switch_commute.c \
-Core/Src/components/command/src/command_helper.c \
-Core/Src/components/config/src/config.c \
-Core/Src/components/fsm/src/fsm.c \
+Core/Src/components/command/command_helper.c \
+Core/Src/components/config/config.c \
+Core/Src/components/fsm/fsm.c \
+Core/Src/components/interpreter/interpreter.c \
+Core/Src/components/interpreter/interpreter_helper.c \
 Core/Src/components/interpreter/parser/src/parser.c \
-Core/Src/components/interpreter/src/interpreter.c \
-Core/Src/components/interpreter/src/interpreter_helper.c \
-Core/Src/components/nanotimer/src/nanotimer.c \
+Core/Src/components/nanotimer/nanotimer.c \
 Core/Src/components/peripherals/callbacks.c \
-Core/Src/components/queues/src/interpreter_status_queue.c \
-Core/Src/components/queues/src/queues.c \
-Core/Src/components/queues/src/sys_log_queue.c \
-Core/Src/components/queues/src/unparsed_command_queue.c \
+Core/Src/components/queues/interpreter_status_queue.c \
+Core/Src/components/queues/queues.c \
+Core/Src/components/queues/sys_log_queue.c \
+Core/Src/components/queues/unparsed_command_queue.c \
 Core/Src/main.c \
 Core/Src/stm32f4xx_hal_msp.c \
 Core/Src/stm32f4xx_it.c \
@@ -146,16 +146,16 @@ AS_INCLUDES = \
 # C includes
 C_INCLUDES =  \
 -ICore/Inc \
--ICore/Src/components/actions/include \
+-ICore/Src/components/actions \
 -ICore/Src/components/actions/switch_commute \
--ICore/Src/components/command/include \
--ICore/Src/components/config/include \
--ICore/Src/components/fsm/include \
--ICore/Src/components/interpreter/include \
+-ICore/Src/components/command \
+-ICore/Src/components/config \
+-ICore/Src/components/fsm \
+-ICore/Src/components/interpreter \
 -ICore/Src/components/interpreter/parser/include \
--ICore/Src/components/nanotimer/include \
+-ICore/Src/components/nanotimer \
 -ICore/Src/components/peripherals \
--ICore/Src/components/queues/include \
+-ICore/Src/components/queues \
 -IDrivers/CMSIS/Device/ST/STM32F4xx/Include \
 -IDrivers/CMSIS/Include \
 -IDrivers/STM32F4xx_HAL_Driver/Inc \
