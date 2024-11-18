@@ -30,7 +30,7 @@ typedef struct interpreter_status
     interpreter_flag_t status;
 } interpreter_status_t;
 
-void interpretAndExecuteCommand();
+void interpretAndExecuteCommand(interpreter_status_t *int_status);
 
 // All functions actions, including parsing
 typedef void (*action_function_ptr)(interpreter_status_t *int_status);

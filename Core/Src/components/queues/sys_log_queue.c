@@ -20,7 +20,7 @@ void sysLogQueue_populate()
         if (strlen((char *)sysLogMessage) + SYSLOG_SINGLE_MESSAGE_LENGTH < MAX_SYSLOG_BUFFER_SIZE && statusQueue_getSize() > 0)
         {
             // Bring in scope struct fields and pop element
-            interpreter_status_t *curStatus = &(statusQueue_list.head->status);
+            interpreter_status_t *curStatus = statusQueue_list.head->status;
             action_return_t action = curStatus->action_return;
             command_t command = curStatus->command;
             interpreter_flag_t curStatusFlag = curStatus->status;
@@ -34,7 +34,7 @@ void sysLogQueue_populate()
                      "Command: %s Status: %d, Interpreter Status: %s,\n\r "
                      "Message: %s \n\r"
                      "Args:\n\r",
-                     command.rootCommand, action.status, interpreter_flag_msg[curStatusFlag], action.data);
+                     command.rootCommand, action.status, interpreter_flag_msg[curStatusFlag], action.message);
             if (strlen((char *)sysLogMessage) + strlen(formattedStr) < MAX_SYSLOG_BUFFER_SIZE)
             {
                 strncat((char *)sysLogMessage, formattedStr, sizeof(sysLogMessage) - strlen((char *)sysLogMessage) - 1);

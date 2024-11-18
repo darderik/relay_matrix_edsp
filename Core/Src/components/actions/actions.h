@@ -23,7 +23,7 @@ typedef enum action_status
 typedef struct action_return
 {
     uint8_t status;
-    unsigned char data[ACTION_DATA_MAXLENGTH];
+//    unsigned char data[ACTION_DATA_MAXLENGTH];
     uint8_t* message;
     uint8_t toTransmit;
 } action_return_t;
@@ -34,6 +34,7 @@ uint8_t command_table_size();
 void action_return_constructor(action_return_t *instance);
 void idn(interpreter_status_t *int_status);
 void sys_getstate(interpreter_status_t *int_status);
-void action_return_addMessage(action_return_t *instance, char *message);
+void action_return_addMessage(action_return_t *instance, char *message,uint8_t toTransmit);
 void action_return_deconstructor(action_return_t *instance);
+void sys_halt(interpreter_status_t *int_status);
 #endif // ACTIONS_H_

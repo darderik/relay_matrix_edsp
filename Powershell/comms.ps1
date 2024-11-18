@@ -1,3 +1,32 @@
+
+<#
+"switch:commute:reset:all",
+"switch:commute a1 a2 a3 a4",
+"switch:commute d1 d2 d3 d4",
+"switch:commute:reset:all",
+"switch:commute c1 c2 c3 c4",
+"switch:commute b1 b2 b3 b4"
+
+"switch:commute a1",
+"switch:commute a2",
+"switch:commute a3",
+"switch:commute a4",
+"switch:commute b1",
+"switch:commute b2",
+"switch:commute b3",
+"switch:commute b4",
+"switch:commute c1",
+"switch:commute c2",
+"switch:commute c3",
+"switch:commute c4",
+"switch:commute d1",
+"switch:commute d2",
+"switch:commute d3",
+"switch:commute d4"
+
+#>
+
+
 function openComPort {
     Param(
         [int]$number,
@@ -13,13 +42,23 @@ function openComPort {
     return $port
 }
 $CommandList = @(
-    "switch:commute:reset:all",
-    "switch:commute c3",
-    "switch:commute d4",
-    "switch:commute:reset c3",
-    "switch:commute:reset d4",
-    "switch:commute c4",
-    "switch:commute d3"
+"switch:commute:reset:all",
+"switch:commute a1",
+"switch:commute a2",
+"switch:commute a3",
+"switch:commute a4",
+"switch:commute b1",
+"switch:commute b2",
+"switch:commute b3",
+"switch:commute b4",
+"switch:commute c1",
+"switch:commute c2",
+"switch:commute c3",
+"switch:commute c4",
+"switch:commute d1",
+"switch:commute d2",
+"switch:commute d3",
+"switch:commute d4"
 )
 #Setup della COM3
 #Baudrate = 9600, Terminator: \r\n, Encoding: ASCII, Databits: 8, Parity: None, Stopbits: 1
@@ -37,8 +76,8 @@ try {
             # Received CTS
             $stopwatch.Stop()
             Write-Host "Tempo trascorso: $($stopwatch.Elapsed.TotalMilliseconds) ms"
-            Start-Sleep -Milliseconds 100
         }
+        Start-Sleep -Milliseconds 2000
     }
 }
 finally {

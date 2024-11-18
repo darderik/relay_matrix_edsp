@@ -46,8 +46,7 @@ void interpretAndExecuteCommand(interpreter_status_t *int_status)
                 if (int_status->action_return.toTransmit)
                 {
                     uint8_t* msg = int_status->action_return.message;
-                    HAL_UART_Transmit(&huart2,msg, strlen((char *)msg), 1000);
-                    int_status->action_return.message=NULL;
+                    HAL_UART_Transmit(&huart2,msg, strlen((char *)msg), HAL_MAX_DELAY);
                 }
                 break;
             }

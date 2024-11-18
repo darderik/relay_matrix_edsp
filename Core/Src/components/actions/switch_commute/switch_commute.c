@@ -40,11 +40,6 @@ void switch_commute_handler(interpreter_status_t *int_status)
                     switch_commute(int_status, curIn, curOut);
                 }
             }
-            else
-            {
-                // Critical: TPL failure
-                state_set(FAIL);
-            }
         }
         else
         {
@@ -194,7 +189,7 @@ uint8_t checkParamsSelector(uint8_t curIn, uint8_t curOut, interpreter_status_t 
     if (!chkCond)
     {
         int_status->action_return.status = ACTION_INVALID_ARGS;
-        strcpy((char *)int_status->action_return.data, "SWITCH:COMMUTE->Invalid params");
+        strcpy((char *)int_status->action_return.message, "SWITCH:COMMUTE->Invalid params");
     }
     return chkCond;
 }
@@ -216,9 +211,8 @@ uint8_t checkResetStatus(relay_group_t *curGroup, interpreter_status_t *int_stat
     {
         int_status->action_return.status = ACTION_ERROR;
         char* msg = "TPL9201: No Power RST 0\r\n";
-        strcpy((char *)int_status->action_return.data, msg );
-        action_return_addMessage(&(int_status->action_return), msg);
-        int_status->action_return.toTransmit = 1;
+        strcpy((char *)int_status->action_return.message, msg);
+        action_return_addMessage(&(int_status->action_return), msg, 1);
         return 0;
     }
     return 1;

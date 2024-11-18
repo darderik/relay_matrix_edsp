@@ -1,15 +1,14 @@
 #include "queues.h"
 #include <stdlib.h>
 //--------------------Interpreter Status Queue Helper--------------------
-void statusQueue_addElement(interpreter_status_t *status)
+void statusQueue_addElement(interpreter_status_t *newStatus)
 {
+    interpreter_status_entry_t *newEntry = (interpreter_status_entry_t *)malloc(sizeof(interpreter_status_entry_t));
+    interpreter_status_entry_constructor(newEntry);
+    newEntry->status = newStatus;
     if (!(statusQueue_getSize() >= MAX_STATUS_QUEUE_SIZE))
     {
         // Space left
-        interpreter_status_entry_t *newEntry = (interpreter_status_entry_t *)malloc(sizeof(interpreter_status_entry_t));
-        newEntry->status = *status;
-        newEntry->next = NULL;
-
         if (statusQueue_list.head == NULL)
         {
             // First element
@@ -25,7 +24,7 @@ void statusQueue_addElement(interpreter_status_t *status)
     {
         // FIFO Logic, the first status will be deleted. Force append
         statusQueue_popElement();
-        statusQueue_addElement(status);
+        statusQueue_addElement(newStatus);
     }
 }
 
@@ -50,14 +49,21 @@ void statusQueue_popElement()
         if (oldHead == curTail)
         {
             // Only one element
-            free(statusQueue_list.head);
             statusQueue_list.head = NULL;
             statusQueue_list.tail = NULL;
         }
         else
         {
             statusQueue_list.head = oldHead->next;
-            interpreter_status_deconstructor(&(oldHead->status));
         }
+        // Deconstruct the status inside the entry
+        interpreter_status_deconstructor(oldHead->status);
+        // Free the interpreter_status_entry_t struct
+        free(oldHead);
     }
+}
+void interpreter_status_entry_constructor(interpreter_status_entry_t *entry)
+{
+    entry->status = NULL;
+    entry->next = NULL;
 }

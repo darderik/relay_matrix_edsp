@@ -26,6 +26,7 @@ void command_deconstructor(command_t *instance)
     {
         free(instance->parameters[i]);
     }
+    free(instance);
 }
 /**
  * @brief      Check if the command instance is consistent

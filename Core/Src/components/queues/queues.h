@@ -42,7 +42,7 @@ typedef struct unparsed_list_container {
  * @param next       The next element in the list
  */
 typedef struct interpreter_status_entry {
-    interpreter_status_t status;
+    interpreter_status_t* status;
     struct interpreter_status_entry* next;
 } interpreter_status_entry_t;
 /**
@@ -73,6 +73,7 @@ unparsed_entry_t* ucq_findElem(char* rootcmd);
 void statusQueue_addElement(interpreter_status_t *status);
 void statusQueue_popElement();
 uint8_t statusQueue_getSize();
+void interpreter_status_entry_constructor(interpreter_status_entry_t *entry);
 
 //---Sys Log Queue Helper---
 void sysLogQueue_populate();

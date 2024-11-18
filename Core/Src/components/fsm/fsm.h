@@ -18,5 +18,5 @@ void state_set(state_t newState);
 void state_handler(UART_HandleTypeDef *huart,SPI_HandleTypeDef *hspi1);
 uint8_t waitForPin(GPIO_TypeDef *port, uint16_t pin, uint32_t timeout);
 void state_get_label(char* formattedStr);
-
+void sys_boot_check();
 #endif

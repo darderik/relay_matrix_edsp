@@ -7,7 +7,7 @@
 #include "interpreter.h"
 
 state_t state = INIT;
-
+static uint8_t mcu_firstRun = 1;
 /**
  * @brief This function is the state machine of the FSM.
  *
@@ -22,6 +22,7 @@ void state_handler(UART_HandleTypeDef *huart, SPI_HandleTypeDef *hspi)
     switch (state)
     {
     case INIT:
+        state_set(IDLE);
         // Turn on PSU by pulling down PC9
         HAL_GPIO_WritePin(PS_ON_GPIO, PS_ON_PIN, GPIO_PIN_RESET);
         if (PSU_CHECK_MODE == PSU_TIMEOUT)
@@ -30,24 +31,22 @@ void state_handler(UART_HandleTypeDef *huart, SPI_HandleTypeDef *hspi)
         }
         else
         {
-            if (!waitForPin(PWR_OK_GPIO, PWR_OK_PIN, PSU_TURNON_TIMEOUT))
+            sys_boot_check(); // Internal command, not callable by operator
+        }
+
+        if (mcu_firstRun)
+        {
+            mcu_firstRun = 0;
+            if (QUEUE_MODE == DMA)
             {
-                // PWR_OK Not reached, fail state
-                sysLogQueue_addMessage("PWR_OK not reached. Debug needed.\n\r");
-                state_set(FAIL);
-                break;
+               HAL_UARTEx_ReceiveToIdle_DMA(huart, rx_buffer, MAX_COMMAND_LENGTH);
+               
+            }
+            else
+            {
+                HAL_UART_Receive_IT(huart, &rx_data_ptr, 1);
             }
         }
-        // Choose queue mode
-        if (QUEUE_MODE == CPU)
-        {
-            HAL_UART_Receive_IT(huart, &rx_data_ptr, 1);
-        }
-        else
-        {
-            HAL_UARTEx_ReceiveToIdle_DMA(huart, rx_buffer, MAX_COMMAND_LENGTH);
-        }
-        state_set(IDLE);
         break;
 
     case IDLE:
@@ -66,11 +65,11 @@ void state_handler(UART_HandleTypeDef *huart, SPI_HandleTypeDef *hspi)
     case INTERPRET:
         if (unparsed_list.head != NULL)
         {
-            interpreter_status_t int_status;
-            interpreter_status_constructor(&int_status);
-            interpretAndExecuteCommand(&int_status);
-            statusQueue_addElement(&int_status);
-            if (int_status.action_return.status == ACTION_ERROR)
+            interpreter_status_t *int_status = (interpreter_status_t* )malloc(sizeof(interpreter_status_t));
+            interpreter_status_constructor(int_status);
+            interpretAndExecuteCommand(int_status);
+            statusQueue_addElement(int_status);
+            if (int_status->action_return.status == ACTION_ERROR)
             {
                 state_set(FAIL);
             }
@@ -136,4 +135,13 @@ uint8_t waitForPin(GPIO_TypeDef *port, uint16_t pin, uint32_t timeout)
     }
     toReturn = ctr <= timeout ? 1 : 0;
     return toReturn;
+}
+void sys_boot_check()
+{
+    if (!waitForPin(PWR_OK_GPIO, PWR_OK_PIN, PSU_TURNON_TIMEOUT))
+    {
+        // PWR_OK Not reached, fail state
+        HAL_UART_Transmit(&huart2, (uint8_t *)"sys:boot->PWR_OK not reached. Debug needed.\n\r", 46, HAL_MAX_DELAY);
+        state_set(FAIL);
+    }
 }
