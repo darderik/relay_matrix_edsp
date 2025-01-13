@@ -24,7 +24,11 @@ void switch_commute_handler(interpreter_status_t *int_status)
         curOut = curParam[1] - '0' - 1;     // Convert '1'-'4' to 0-3
         if (checkParamsSelector(curIn, curOut, int_status))
         {
-            if (checkResetStatus(&relayGroups[curIn], int_status))
+            if (strcicmp((char *)commandData.rootCommand, "SWITCH:COMMUTE:STATUS?") == 0)
+            {
+                checkResetStatus(&relayGroups[curIn], int_status, 1);
+            }
+            else if (checkResetStatus(&relayGroups[curIn], int_status, 0))
             {
                 // Maybe hash comparison?
                 if (strcicmp((char *)commandData.rootCommand, "SWITCH:COMMUTE:EXCLUSIVE") == 0)
@@ -62,7 +66,7 @@ void switch_commute_reset_all(interpreter_status_t *int_status)
     for (size_t i = 0; i < sizeof(relayGroups) / sizeof(relay_group_t); i++)
     {
         relay_group_t *curGroup = &relayGroups[i];
-        if (checkResetStatus(curGroup, int_status))
+        if (checkResetStatus(curGroup, int_status, 0))
         {
             switch (SWITCH_COMMUTE_MODE)
             {
@@ -204,16 +208,25 @@ uint8_t checkParamsSelector(uint8_t curIn, uint8_t curOut, interpreter_status_t 
  *
  * @return     0 if the relay is not powered, 1 otherwise
  */
-uint8_t checkResetStatus(relay_group_t *curGroup, interpreter_status_t *int_status)
+uint8_t checkResetStatus(relay_group_t *curGroup, interpreter_status_t *int_status, uint8_t queryMode)
 {
     GPIO_PinState rstStatus = configAndRead(curGroup->gpio_port_nrst, curGroup->nrst_pin);
     if (rstStatus == GPIO_PIN_RESET)
     {
         int_status->action_return.status = ACTION_ERROR;
-        char* msg = "TPL9201: No Power RST 0\r\n";
+        if (queryMode)
+        {
+            char *msg = "TPL9201: NO Power RST 0\r\n";
+            strcpy((char *)int_status->action_return.message, msg);
+            action_return_addMessage(&(int_status->action_return), msg, 1);
+        }
+        return 0;
+    }
+    else if (queryMode)
+    {
+        char *msg = "TPL9201: OK Power RST 1\r\n";
         strcpy((char *)int_status->action_return.message, msg);
         action_return_addMessage(&(int_status->action_return), msg, 1);
-        return 0;
     }
     return 1;
 }
@@ -246,7 +259,7 @@ void transmitSPI(relay_group_t *curGroup, uint8_t byteP, uint8_t isLatching)
     }
 }
 
-GPIO_PinState  configAndRead(GPIO_TypeDef *GPIOx, uint16_t Pin)
+GPIO_PinState configAndRead(GPIO_TypeDef *GPIOx, uint16_t Pin)
 {
     HAL_GPIO_WritePin(GPIOx, Pin, GPIO_PIN_SET); // H-Z
     waitMultiple20ns(10);

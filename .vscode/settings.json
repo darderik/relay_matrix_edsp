@@ -9,5 +9,8 @@
         "switch_commute.h": "c",
         "queues.h": "c"
     },
-    "C_Cpp.default.compilerPath": "C:\\ProgramData\\mingw64\\mingw64\\bin\\gcc.exe"
+    "C_Cpp.default.compilerPath": "C:\\ProgramData\\mingw64\\mingw64\\bin\\gcc.exe",
+    "files.autoSave": "onWindowChange",
+    "editor.formatOnPaste": false,
+    "editor.formatOnSave": true
 }

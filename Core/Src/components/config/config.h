@@ -12,8 +12,9 @@
 #define MAX_COMMAND_LENGTH 256
 #define MAX_TIMEOUT_MINUTES 3
 #define PSU_TURNON_TIMEOUT 600
-#define PSU_CHECK_MODE PSU_PWROK
+#define PSU_CHECK_MODE PSU_TIMEOUT
 #define QUEUE_MODE DMA
+#define CTS_SEND 0
 
 // Queues
 #define MAX_COMMAND_QUEUE_SIZE 32
@@ -24,12 +25,11 @@
 
 // Init
 #define PS_ON_GPIO GPIOC
-#define PS_ON_PIN GPIO_PIN_9 
+#define PS_ON_PIN GPIO_PIN_9
 #define PWR_OK_GPIO GPIOB
 #define PWR_OK_PIN GPIO_PIN_5
 
-
- // Switch commute
+// Switch commute
 #define SWITCH_EMR 0
 #define SWITCH_SSR 1
 #define SWITCH_COMMUTE_MODE SWITCH_EMR
