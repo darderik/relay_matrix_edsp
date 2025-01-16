@@ -39,8 +39,7 @@ void state_handler(UART_HandleTypeDef *huart, SPI_HandleTypeDef *hspi)
             mcu_firstRun = 0;
             if (QUEUE_MODE == DMA)
             {
-               HAL_UARTEx_ReceiveToIdle_DMA(huart, rx_buffer, MAX_COMMAND_LENGTH);
-               
+                HAL_UARTEx_ReceiveToIdle_DMA(huart, rx_buffer, MAX_COMMAND_LENGTH);
             }
             else
             {
@@ -65,7 +64,7 @@ void state_handler(UART_HandleTypeDef *huart, SPI_HandleTypeDef *hspi)
     case INTERPRET:
         if (unparsed_list.head != NULL)
         {
-            interpreter_status_t *int_status = (interpreter_status_t* )malloc(sizeof(interpreter_status_t));
+            interpreter_status_t *int_status = (interpreter_status_t *)malloc(sizeof(interpreter_status_t));
             interpreter_status_constructor(int_status);
             interpretAndExecuteCommand(int_status);
             statusQueue_addElement(int_status);
@@ -141,7 +140,9 @@ void sys_boot_check()
     if (!waitForPin(PWR_OK_GPIO, PWR_OK_PIN, PSU_TURNON_TIMEOUT))
     {
         // PWR_OK Not reached, fail state
-        HAL_UART_Transmit(&huart2, (uint8_t *)"sys:boot->PWR_OK not reached. Debug needed.\n\r", 46, HAL_MAX_DELAY);
+        unsigned char msg[96];
+        snprintf((char *)msg, sizeof(msg), "sys:boot->PWR_OK not reached.ATX PSU Malfunctioning.Stopping..%s", TERM_CHAR);
+        HAL_UART_Transmit(&huart2, (uint8_t *)msg, strlen((char *)msg), HAL_MAX_DELAY);
         state_set(FAIL);
     }
 }

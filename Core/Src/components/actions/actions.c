@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "switch_commute.h"
+#include "config.h"
 
 // Here are defined all the commands and all the behaviour associated
 // Each string has a corresponding function pointer
@@ -50,7 +51,7 @@ void sys_getstate(interpreter_status_t *int_status)
     char output[16] = {0};
     char message[64] = {0};
     state_get_label(output);
-    sprintf(message, "sys:getstate -> Current STATE: %s \r\n", output);
+    sprintf(message, "STATE:%s%s", output, TERM_CHAR);
     action_return_addMessage(&(int_status->action_return), message, 1);
 }
 void idn(interpreter_status_t *int_status)
@@ -66,6 +67,6 @@ void idn(interpreter_status_t *int_status)
              (unsigned long)uid[1],
              (unsigned long)uid[2]);
     char full_message[96] = {'\0'};
-    snprintf(full_message, sizeof(full_message), "Relay Matrix V1.0 STM32F401RE UID:%s\r\n", uid_string);
+    snprintf(full_message, sizeof(full_message), "DIIEM,Relay Matrix,%s,V1.0", uid_string);
     action_return_addMessage(&(int_status->action_return), full_message, 1);
 }

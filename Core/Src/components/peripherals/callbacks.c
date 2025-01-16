@@ -1,7 +1,8 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include "fsm.h"
 #include "config.h"
-#include "string.h"
-#include <stdlib.h>
 #include "queues.h"
 #include "callbacks.h"
 
@@ -22,20 +23,13 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
                 // End of command
                 // Move buffer to queue
                 rx_buffer[inProgress] = '\0';
-                uint8_t error = ucq_addElement(rx_buffer);
-                if (CTS_SEND)
+                ucq_addElement(rx_buffer);
+                if (HANDSHAKE_SCPI)
                 {
-                    if (error)
-                    {
-                        // Queue is probably full
-                        HAL_UART_Transmit(huart, (unsigned char *)"\r\nCRIT:Queue full", 15, HAL_MAX_DELAY);
-                    }
-                    else
-                    {
-                        HAL_UART_Transmit(huart, (unsigned char *)"\r\nOK|CTS|", 12, HAL_MAX_DELAY);
-                    }
+                    unsigned char handshake[8];
+                    snprintf((char *)handshake, sizeof(handshake), "OK%s", TERM_CHAR);
+                    HAL_UART_Transmit(huart, (uint8_t *)handshake, strlen((char *)handshake), HAL_MAX_DELAY);
                 }
-                HAL_UART_Transmit(huart, (unsigned char *)"\r\n", 2, HAL_MAX_DELAY);
                 inProgress = 0;
                 lastTick = 0;
                 break;
@@ -80,18 +74,12 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
     {
         // WE Have received a string,add to ucq (if there is space)
         rx_buffer[Size] = '\0';
-        uint8_t error = ucq_addElement(rx_buffer);
-        if (CTS_SEND)
+        ucq_addElement(rx_buffer);
+        if (HANDSHAKE_SCPI)
         {
-            if (error)
-            {
-                // Queue is probably full
-                HAL_UART_Transmit(huart, (unsigned char *)"|CRIT||Queue Full\r\n", 22, HAL_MAX_DELAY);
-            }
-            else
-            {
-                HAL_UART_Transmit(huart, (unsigned char *)"|CTS|\r\n", 7, HAL_MAX_DELAY);
-            }
+            char message[8];
+            snprintf(message, sizeof(message), "OK%s", TERM_CHAR);
+            HAL_UART_Transmit(huart, (unsigned char *)message, strlen(message), HAL_MAX_DELAY);
         }
     }
     HAL_UARTEx_ReceiveToIdle_DMA(huart, rx_buffer, MAX_COMMAND_LENGTH);

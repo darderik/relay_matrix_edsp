@@ -35,11 +35,13 @@ uint8_t ucq_addElement(unsigned char *command)
     {
         if (state_get() != FAIL)
         {
-            sysLogQueue_addMessage("--CRITICAL--\nCommand queue full,executing queued commands.");
+            char msg[64];
+            snprintf(msg, sizeof(msg), "--CRITICAL--%s Command queue full,executing queued commands.", NEWLINE_STR);
+            sysLogQueue_addMessage(msg);
             state_set(INTERPRET);
         }
     }
-    return countList>=MAX_COMMAND_QUEUE_SIZE ? 1 : 0;
+    return countList >= MAX_COMMAND_QUEUE_SIZE ? 1 : 0;
 }
 
 /**

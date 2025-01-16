@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "interpreter.h"
-
+#include "config.h"
 /**
  * @brief Populates sysLogMessage with the status of the interpreter
  *        in a human-readable format.
@@ -29,29 +29,39 @@ void sysLogQueue_populate()
             unsigned char **args = command.parameters;
             uint8_t argsCount = command.paramsCount;
             char formattedStr[SYSLOG_SINGLE_MESSAGE_LENGTH] = {'\0'};
+
+            // Prepare args list
+            char argsList[128] = {'\0'};
+            for (uint8_t j = 0; j < argsCount; j++)
+            {
+                char *curArg = (char *)args[j];
+                char argStr[64];
+                snprintf(argStr, sizeof(argStr), "---> Arg %d: %s %s", j, curArg, NEWLINE_STR);
+                if (strlen(argsList) + strlen(argStr) < sizeof(argsList) - 1)
+                {
+                    strncat((char *)argsList, argStr, strlen(argStr));
+                }
+            }
+
             snprintf(formattedStr, sizeof(formattedStr),
-                     "---COMMAND DIAGNOSTIC--- \n\r"
-                     "Command: %s Status: %d, Interpreter Status: %s,\n\r "
-                     "Message: %s \n\r"
-                     "Args:\n\r",
-                     command.rootCommand, action.status, interpreter_flag_msg[curStatusFlag], action.message);
+                     "---COMMAND DIAGNOSTIC--- %s"
+                     "Command: %s Status: %d, Interpreter Status: %s %s"
+                     "Message: %s %s"
+                     "Args: %s %s",
+                     NEWLINE_STR, command.rootCommand, action.status, interpreter_flag_msg[curStatusFlag], NEWLINE_STR, action.message, NEWLINE_STR, argsList, NEWLINE_STR);
+
             if (strlen((char *)sysLogMessage) + strlen(formattedStr) < MAX_SYSLOG_BUFFER_SIZE)
             {
                 strncat((char *)sysLogMessage, formattedStr, sizeof(sysLogMessage) - strlen((char *)sysLogMessage) - 1);
-                for (uint8_t j = 0; j < argsCount; j++)
-                {
-                    char *curArg = (char *)args[j];
-                    char argStr[64];
-                    snprintf(argStr, sizeof(argStr), "---> Arg %d: %s \n\r", j, curArg);
-                    strncat((char *)sysLogMessage, argStr, sizeof(sysLogMessage) - strlen((char *)sysLogMessage) - 1);
-                }
             }
         }
         else if (statusQueue_getSize() > 0)
         {
             // Queue is full
             memset(sysLogMessage, 0, sizeof(sysLogMessage));
-            sysLogQueue_addMessage("--WARNING--\n\r sysLog was wiped.\n\r");
+            char msg[64];
+            snprintf(msg, sizeof(msg), "--WARNING--%s sysLog was wiped.%s", NEWLINE_STR, NEWLINE_STR);
+            sysLogQueue_addMessage(msg);
         }
     }
 }

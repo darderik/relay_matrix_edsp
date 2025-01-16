@@ -216,7 +216,8 @@ uint8_t checkResetStatus(relay_group_t *curGroup, interpreter_status_t *int_stat
         int_status->action_return.status = ACTION_ERROR;
         if (queryMode)
         {
-            char *msg = "TPL9201: NO Power RST 0\r\n";
+            char msg[32];
+            snprintf(msg, sizeof(msg), "TPL9201: ERR Power RST 0%s", TERM_CHAR);
             strcpy((char *)int_status->action_return.message, msg);
             action_return_addMessage(&(int_status->action_return), msg, 1);
         }
@@ -224,7 +225,8 @@ uint8_t checkResetStatus(relay_group_t *curGroup, interpreter_status_t *int_stat
     }
     else if (queryMode)
     {
-        char *msg = "TPL9201: OK Power RST 1\r\n";
+        char msg[32];
+        snprintf(msg, sizeof(msg), "TPL9201: OK Power RST 1%s", TERM_CHAR);
         strcpy((char *)int_status->action_return.message, msg);
         action_return_addMessage(&(int_status->action_return), msg, 1);
     }
