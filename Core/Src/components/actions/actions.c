@@ -1,4 +1,3 @@
-
 #include "actions.h"
 #include "fsm.h"
 #include "interpreter.h"
@@ -56,5 +55,17 @@ void sys_getstate(interpreter_status_t *int_status)
 }
 void idn(interpreter_status_t *int_status)
 {
-    action_return_addMessage(&(int_status->action_return), "IDN->Relay Matrix V1.0 STM32F401RE\r\n", 1);
+    uint32_t uid[3];
+    uid[0] = HAL_GetUIDw0();
+    uid[1] = HAL_GetUIDw1();
+    uid[2] = HAL_GetUIDw2();
+    // 3*8 + 1 FF FF FF FF
+    char uid_string[26] = {0};
+    snprintf(uid_string, sizeof(uid_string), "%08lX%08lX%08lX",
+             (unsigned long)uid[0],
+             (unsigned long)uid[1],
+             (unsigned long)uid[2]);
+    char full_message[96] = {'\0'};
+    snprintf(full_message, sizeof(full_message), "Relay Matrix V1.0 STM32F401RE UID:%s\r\n", uid_string);
+    action_return_addMessage(&(int_status->action_return), full_message, 1);
 }
