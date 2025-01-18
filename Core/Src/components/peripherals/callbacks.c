@@ -9,6 +9,12 @@
 static uint16_t inProgress;
 static uint32_t lastTick;
 
+uint8_t is_query(unsigned char *command)
+{
+    // Contains '?'
+    return strchr((char *)command, '?') != NULL;
+}
+
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
     if (huart->Instance == USART2)
@@ -24,7 +30,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
                 // Move buffer to queue
                 rx_buffer[inProgress] = '\0';
                 ucq_addElement(rx_buffer);
-                if (HANDSHAKE_SCPI)
+                if (HANDSHAKE_SCPI && !is_query(rx_buffer))
                 {
                     unsigned char handshake[8];
                     snprintf((char *)handshake, sizeof(handshake), "OK%s", TERM_CHAR);
@@ -75,7 +81,7 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
         // WE Have received a string,add to ucq (if there is space)
         rx_buffer[Size] = '\0';
         ucq_addElement(rx_buffer);
-        if (HANDSHAKE_SCPI)
+        if (HANDSHAKE_SCPI && !is_query(rx_buffer))
         {
             char message[8];
             snprintf(message, sizeof(message), "OK%s", TERM_CHAR);

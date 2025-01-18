@@ -51,7 +51,7 @@ void sys_getstate(interpreter_status_t *int_status)
     char output[16] = {0};
     char message[64] = {0};
     state_get_label(output);
-    sprintf(message, "STATE:%s%s", output, TERM_CHAR);
+    sprintf(message, "STATE:%s", output);
     action_return_addMessage(&(int_status->action_return), message, 1);
 }
 void idn(interpreter_status_t *int_status)

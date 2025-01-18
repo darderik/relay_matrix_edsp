@@ -1,8 +1,8 @@
 {
-    "cortex-debug.armToolchainPath": "c:\\Users\\Dardo\\AppData\\Roaming\\Code\\User\\globalStorage\\bmd.stm32-for-vscode\\@xpack-dev-tools\\arm-none-eabi-gcc\\13.3.1-1.1.1\\.content\\bin",
-    "cortex-debug.openocdPath": "C:\\USERS\\DARDO\\APPDATA\\ROAMING\\CODE\\USER\\GLOBALSTORAGE\\BMD.STM32-FOR-VSCODE\\@XPACK-DEV-TOOLS\\OPENOCD\\0.12.0-4.1\\.CONTENT\\BIN\\OPENOCD.EXE",
-    "stm32-for-vscode.openOCDPath": "C:\\USERS\\DARDO\\APPDATA\\ROAMING\\CODE\\USER\\GLOBALSTORAGE\\BMD.STM32-FOR-VSCODE\\@XPACK-DEV-TOOLS\\OPENOCD\\0.12.0-4.1\\.CONTENT\\BIN\\OPENOCD.EXE",
-    "stm32-for-vscode.armToolchainPath": "c:\\Users\\Dardo\\AppData\\Roaming\\Code\\User\\globalStorage\\bmd.stm32-for-vscode\\@xpack-dev-tools\\arm-none-eabi-gcc\\13.3.1-1.1.1\\.content\\bin",
+    "cortex-debug.armToolchainPath": "c:\\Users\\Dardo\\AppData\\Roaming\\Code\\User\\globalStorage\\bmd.stm32-for-vscode\\@xpack-dev-tools\\arm-none-eabi-gcc\\13.2.1-1.1.1\\.content\\bin",
+    "cortex-debug.openocdPath": "C:\\USERS\\DARDO\\APPDATA\\ROAMING\\CODE\\USER\\GLOBALSTORAGE\\BMD.STM32-FOR-VSCODE\\@XPACK-DEV-TOOLS\\OPENOCD\\0.12.0-3.1\\.CONTENT\\BIN\\OPENOCD.EXE",
+    "stm32-for-vscode.openOCDPath": "C:\\USERS\\DARDO\\APPDATA\\ROAMING\\CODE\\USER\\GLOBALSTORAGE\\BMD.STM32-FOR-VSCODE\\@XPACK-DEV-TOOLS\\OPENOCD\\0.12.0-3.1\\.CONTENT\\BIN\\OPENOCD.EXE",
+    "stm32-for-vscode.armToolchainPath": "c:\\Users\\Dardo\\AppData\\Roaming\\Code\\User\\globalStorage\\bmd.stm32-for-vscode\\@xpack-dev-tools\\arm-none-eabi-gcc\\13.2.1-1.1.1\\.content\\bin",
     "cmake.sourceDirectory": "D:/OneDrive - Universita degli Studi Roma Tre/Repository/Esame/RelayMatrix/Drivers/CMSIS/NN",
     "cortex-debug.variableUseNaturalFormat": true,
     "files.associations": {
