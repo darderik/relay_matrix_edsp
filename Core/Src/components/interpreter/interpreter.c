@@ -3,6 +3,8 @@
 #include "queues.h"
 #include "command.h"
 #include "main.h"
+#include "callbacks.h"
+
 const char *interpreter_flag_msg[] = {"OK", "INVALID COMMAND", "INVALID ARGS"};
 
 /**
@@ -17,9 +19,9 @@ void interpretAndExecuteCommand(interpreter_status_t *int_status)
 
     // Parse first command from list of unparsed commands
     command_t *curCommandPtr = &(int_status->command);
-    
+
     // Call command constructor here so we can pop an element
-    uint8_t* curUnformatted = unparsed_list.head->command;
+    uint8_t *curUnformatted = unparsed_list.head->command;
     command_constructor(curCommandPtr, curUnformatted);
 
     ucq_popElement();
@@ -37,7 +39,8 @@ void interpretAndExecuteCommand(interpreter_status_t *int_status)
         for (int i = 0; i < maxCount; i++)
         {
             // Max one match for the search
-            if (strcicmp((char *)command_table[i].rootCommand, (char *)curCommandPtr->rootCommand) == 0)
+            char *curRootCommand = (char *)curCommandPtr->rootCommand;
+            if (strcicmp((char *)command_table[i].rootCommand, curRootCommand) == 0)
             {
                 // Execute the command
                 command_table[i].function(int_status);
@@ -45,14 +48,28 @@ void interpretAndExecuteCommand(interpreter_status_t *int_status)
                 // Return data if needed, uart transmit of action_return data
                 if (int_status->action_return.toTransmit)
                 {
-                    uint8_t* msg = int_status->action_return.message;
-                    HAL_UART_Transmit(&huart2,msg, strlen((char *)msg), HAL_MAX_DELAY);
+                    uint8_t fullMsg[strlen((char *)int_status->action_return.message) + 8];
+                    if (HANDSHAKE_SCPI)
+                    {
+                        snprintf((char *)fullMsg, sizeof(fullMsg), "%s%s%s%s", int_status->action_return.message, TERM_CHAR, "OK", TERM_CHAR);
+                    }
+                    else
+                    {
+                        snprintf((char *)fullMsg, sizeof(fullMsg), "%s%s", int_status->action_return.message, TERM_CHAR);
+                    }
+                    HAL_UART_Transmit(&huart2, fullMsg, strlen((char *)fullMsg), HAL_MAX_DELAY);
                 }
                 break;
             }
         }
         if (!found)
         {
+            char fullMsg[16];
+            if (is_query(curCommandPtr->rootCommand))
+            {
+                snprintf(fullMsg, sizeof(fullMsg), "%s%s%s", TERM_CHAR, "OK", TERM_CHAR);
+                HAL_UART_Transmit(&huart2, (uint8_t)fullMsg, strlen((char *)fullMsg), HAL_MAX_DELAY);
+            }
             int_status->status = INTERPRETER_INVALID_COMMAND;
         }
     }
