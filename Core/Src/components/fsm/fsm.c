@@ -57,6 +57,13 @@ void state_handler(UART_HandleTypeDef *huart, SPI_HandleTypeDef *hspi)
         }
         else
         {
+            // List is empty, maybe uart error.
+            uint32_t curError = HAL_UART_GetError(huart);
+            if (curError != HAL_UART_ERROR_NONE)
+            {
+                HAL_UART_DMAStop(huart);
+                HAL_UARTEx_ReceiveToIdle_DMA(huart, rx_buffer, MAX_COMMAND_LENGTH);
+            }
             state_set(LOG);
         }
         break;

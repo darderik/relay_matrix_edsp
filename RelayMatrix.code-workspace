@@ -23,7 +23,8 @@
 			"stm32f4xx_hal.h": "c",
 			"callbacks.h": "c",
 			"switch_commute.h": "c",
-			"string.h": "c"
+			"string.h": "c",
+			"stm32f4xx_hal_uart.h": "c"
 		}
 	}
 }

@@ -5,6 +5,8 @@
 #include "config.h"
 #include "queues.h"
 #include "callbacks.h"
+#include "main.h"
+#include "stm32f4xx_hal_uart.h"
 
 static uint16_t inProgress;
 static uint32_t lastTick;

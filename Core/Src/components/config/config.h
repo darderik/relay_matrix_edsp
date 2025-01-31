@@ -14,8 +14,8 @@
 #define PSU_TURNON_TIMEOUT 600
 #define PSU_CHECK_MODE PSU_TIMEOUT
 #define QUEUE_MODE DMA
-#define HANDSHAKE_SCPI 0
-#define TERM_CHAR "\n\r"
+#define HANDSHAKE_SCPI 1
+#define TERM_CHAR "\n"
 // Newline dummy character that in reception may get replaced by proper newline. Multiline msg
 #define NEWLINE_STR "\\|" // pyVisa doesn't allow multichar term char so using \n or \r for multiline message may break.
 

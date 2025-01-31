@@ -21,6 +21,7 @@ const command_table_entry_t command_table[] = {
     {(unsigned char *)"switch:commute:reset:all", switch_commute_reset_all},
     {(unsigned char *)"*IDN?", idn}, // IDN Command
     {(unsigned char *)"sys:halt", sys_halt},
+    {(unsigned char *)"*OPC?", opc},
     //,{(unsigned char *)"help?", help }
 };
 uint8_t command_table_size()
@@ -69,4 +70,8 @@ void idn(interpreter_status_t *int_status)
     char full_message[96] = {'\0'};
     snprintf(full_message, sizeof(full_message), "DIIEM,Relay Matrix,%s,V1.0", uid_string);
     action_return_addMessage(&(int_status->action_return), full_message, 1);
+}
+void opc(interpreter_status_t *int_status)
+{
+    action_return_addMessage(&(int_status->action_return), "1", 1);
 }

@@ -10,7 +10,6 @@ typedef enum interpreter_flag
     INTERPRETER_INVALID_ARGS
 } interpreter_flag_t;
 
-
 /**
  * @struct interpreter_status
  *
@@ -41,9 +40,9 @@ typedef struct command_table_entry
     const action_function_ptr function;
 } command_table_entry_t;
 extern const command_table_entry_t command_table[];
-extern const char* interpreter_flag_msg[];
-void interpreter_status_deconstructor(interpreter_status_t* int_status);
+extern const char *interpreter_flag_msg[];
+void interpreter_status_deconstructor(interpreter_status_t *int_status);
 void sys_log(interpreter_status_t *int_status);
-void interpreter_status_constructor(interpreter_status_t* int_status);
+void interpreter_status_constructor(interpreter_status_t *int_status);
 
 #endif // INTERPRETER_H_

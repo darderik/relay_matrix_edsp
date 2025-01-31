@@ -67,8 +67,11 @@ void interpretAndExecuteCommand(interpreter_status_t *int_status)
             char fullMsg[16];
             if (is_query(curCommandPtr->rootCommand))
             {
-                snprintf(fullMsg, sizeof(fullMsg), "%s%s%s", TERM_CHAR, "OK", TERM_CHAR);
-                HAL_UART_Transmit(&huart2, (uint8_t)fullMsg, strlen((char *)fullMsg), HAL_MAX_DELAY);
+                if (HANDSHAKE_SCPI)
+                {
+                    snprintf(fullMsg, sizeof(fullMsg), "%s%s%s", TERM_CHAR, "OK", TERM_CHAR);
+                    HAL_UART_Transmit(&huart2, (uint8_t *)fullMsg, strlen((char *)fullMsg), HAL_MAX_DELAY);
+                }
             }
             int_status->status = INTERPRETER_INVALID_COMMAND;
         }
