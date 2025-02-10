@@ -19,4 +19,3 @@ interpreter_status_t *statusQueue[MAX_STATUS_QUEUE_SIZE] = {NULL};
 interpreter_status_list_container_t statusQueue_list;
 
 // ---------------- Sys log messages -------------------
-unsigned char sysLogMessage[MAX_SYSLOG_BUFFER_SIZE] = {'\0'};

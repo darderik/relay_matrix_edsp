@@ -43,9 +43,9 @@ void help(interpreter_status_t *int_status)
 }
 void sys_log(interpreter_status_t *int_status)
 {
-    // int_status is unused, but it is put to respect the function prototype
-    HAL_UART_Transmit(&huart2, sysLogMessage, strlen((char *)sysLogMessage), 1000);
-    memset(sysLogMessage, 0, sizeof(sysLogMessage));
+    char full_message[SYSLOG_SINGLE_MESSAGE_LENGTH * 6] = {'\0'};
+    sysLogQueue_getFullMessage(full_message, SYSLOG_SINGLE_MESSAGE_LENGTH);
+    action_return_addMessage(&(int_status->action_return), full_message, 1);
 }
 void sys_getstate(interpreter_status_t *int_status)
 {
@@ -68,7 +68,7 @@ void idn(interpreter_status_t *int_status)
              (unsigned long)uid[1],
              (unsigned long)uid[2]);
     char full_message[96] = {'\0'};
-    snprintf(full_message, sizeof(full_message), "DIIEM,Relay Matrix,%s,V1.0", uid_string);
+    snprintf(full_message, sizeof(full_message), "DIIEM,Relay Matrix,%s,V1.0%s", uid_string, TERM_CHAR);
     action_return_addMessage(&(int_status->action_return), full_message, 1);
 }
 void opc(interpreter_status_t *int_status)

@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include "parser.h"
 #include "fsm.h"
+#include "callbacks.h"
+#include "queues.h"
 //--------------------Unparsed Command Queue Helper--------------------
 
 /**
@@ -36,8 +38,8 @@ uint8_t ucq_addElement(unsigned char *command)
         if (state_get() != FAIL)
         {
             char msg[64];
-            snprintf(msg, sizeof(msg), "--CRITICAL--%s Command queue full,executing queued commands.", NEWLINE_STR);
-            sysLogQueue_addMessage(msg);
+            snprintf(msg, sizeof(msg), "--CRITICAL--%s Command queue full,executing queued commands.%s", NEWLINE_STR, TERM_CHAR);
+            sysLogQueue_addNodeManual(msg);
             state_set(INTERPRET);
         }
     }

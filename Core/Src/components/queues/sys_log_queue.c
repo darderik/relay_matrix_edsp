@@ -4,72 +4,157 @@
 #include <stdio.h>
 #include "interpreter.h"
 #include "config.h"
-/**
- * @brief Populates sysLogMessage with the status of the interpreter
- *        in a human-readable format.
- *
- * @details This function will remove the head of the statusQueue_list
- *          and use its contents to generate a sysLogMessage. If the
- *          sysLogMessage would grow larger than MAX_SYSLOG_BUFFER_SIZE,
- *          sysLogMessage is reset and a warning is added to the start
- *          of the message.
- */
-void sysLogQueue_populate()
+
+syslog_entry_t *syslog_head = NULL;
+
+void sysLogQueue_addNode()
 {
-    int currentSize = strlen((char *)sysLogMessage);
-    int projectedSize = currentSize + SYSLOG_SINGLE_MESSAGE_LENGTH;
-    if (projectedSize < MAX_SYSLOG_BUFFER_SIZE && statusQueue_getSize() > 0)
+    if (statusQueue_list.head != NULL)
     {
-        // Bring in scope struct fields and pop element
         interpreter_status_t *curStatus = statusQueue_list.head->status;
-        action_return_t action = curStatus->action_return;
-        command_t command = curStatus->command;
-        interpreter_flag_t curStatusFlag = curStatus->status;
         statusQueue_popElement();
+        char message[SYSLOG_SINGLE_MESSAGE_LENGTH] = {'\0'};
+        sysLogQueue_craftMessage(message, SYSLOG_SINGLE_MESSAGE_LENGTH, curStatus);
 
-        unsigned char **args = command.parameters;
-        uint8_t argsCount = command.paramsCount;
-        char formattedStr[SYSLOG_SINGLE_MESSAGE_LENGTH] = {'\0'};
+        syslog_entry_t *newNode = (syslog_entry_t *)malloc(sizeof(syslog_entry_t));
+        char *fullMessage = (char *)malloc(strlen(message) + 1);
+        strcpy(fullMessage, message);
+        newNode->message = fullMessage;
+        newNode->next = NULL;
 
-        // Prepare args list
-        char argsList[128] = {'\0'};
-        for (uint8_t j = 0; j < argsCount; j++)
+        if (syslog_head == NULL)
         {
-            char *curArg = (char *)args[j];
-            char argStr[64];
-            snprintf(argStr, sizeof(argStr), "---> Arg %d: %s %s", j, curArg, NEWLINE_STR);
-            if (strlen(argsList) + strlen(argStr) < sizeof(argsList) - 1)
+            syslog_head = newNode;
+        }
+        else
+        {
+            if (sysLogQueue_getSize() >= SYSLOG_MAX_MESSAGES)
             {
-                strncat((char *)argsList, argStr, strlen(argStr));
+                // FIFO mechanism
+                sysLogQueue_popNode();
             }
-        }
 
-        snprintf(formattedStr, sizeof(formattedStr),
-                 "---COMMAND DIAGNOSTIC--- %s"
-                 "Command: %s Status: %d, Interpreter Status: %s %s"
-                 "Message: %s %s"
-                 "Args: %s %s",
-                 NEWLINE_STR, command.rootCommand, action.status, interpreter_flag_msg[curStatusFlag], NEWLINE_STR, action.message, NEWLINE_STR, argsList, NEWLINE_STR);
-
-        if (currentSize + strlen(formattedStr) + 1 < MAX_SYSLOG_BUFFER_SIZE)
-        {
-            strncat((char *)sysLogMessage, formattedStr, strlen(formattedStr));
+            syslog_entry_t *last = syslog_head;
+            while (last->next != NULL)
+            {
+                last = last->next;
+            }
+            last->next = newNode;
         }
-    }
-    else if (statusQueue_getSize() > 0)
-    {
-        // Queue is full
-        memset(sysLogMessage, 0, sizeof(sysLogMessage));
-        char msg[64];
-        snprintf(msg, sizeof(msg), "--WARNING--%s sysLog was wiped.%s", NEWLINE_STR, NEWLINE_STR);
-        sysLogQueue_addMessage(msg);
     }
 }
-
-void sysLogQueue_addMessage(char *message)
+void sysLogQueue_addNodeManual(char *msg)
 {
-    if (strlen((char *)sysLogMessage) + strlen(message) + 1 < MAX_SYSLOG_BUFFER_SIZE)
+    syslog_entry_t *newNode = (syslog_entry_t *)malloc(sizeof(syslog_entry_t));
+    char *fullMessage = (char *)malloc(strlen(msg) + 1);
+    strcpy(fullMessage, msg);
+    newNode->message = fullMessage;
+    newNode->next = NULL;
+
+    if (syslog_head == NULL)
     {
-        strcat((char *)sysLogMessage, message);
+        syslog_head = newNode;
     }
+    else
+    {
+        if (sysLogQueue_getSize() >= SYSLOG_MAX_MESSAGES)
+        {
+            // FIFO mechanism
+            sysLogQueue_popNode();
+        }
+
+        syslog_entry_t *last = syslog_head;
+        while (last->next != NULL)
+        {
+            last = last->next;
+        }
+        last->next = newNode;
+    }
+}
+void sysLogQueue_popNode()
+{
+    if (syslog_head != NULL)
+    {
+        syslog_entry_t *last = syslog_head;
+        syslog_head = syslog_head->next;
+        free(last->message);
+        free(last);
+    }
+}
+void sysLogQueue_forceUpdate()
+{
+    while (statusQueue_getSize() > 0)
+    {
+        sysLogQueue_addNode();
+    }
+}
+void sysLogQueue_getFullMessage(char *fullMessage, uint16_t length)
+{
+    char *curTermChar = TERM_CHAR;
+    uint8_t curTermCharLen = strlen(curTermChar);
+    syslog_entry_t *last = syslog_head;
+    while (last != NULL)
+    {
+        char *curMsg = last->message;
+        snprintf(fullMessage + strlen(fullMessage), length - curTermCharLen - strlen(fullMessage), "%s", curMsg);
+        last = last->next;
+        sysLogQueue_popNode();
+    }
+    // Pointer arithmetic
+    snprintf(fullMessage + strlen(fullMessage), length - strlen(fullMessage), "%s", curTermChar);
+}
+uint16_t sysLogQueue_getTotalLength()
+{
+    syslog_entry_t *last = syslog_head;
+    uint16_t totalLength = 0;
+    while (last != NULL)
+    {
+        totalLength += strlen(last->message);
+        last = last->next;
+    }
+    return totalLength;
+}
+uint8_t sysLogQueue_getSize()
+{
+    syslog_entry_t *last = syslog_head;
+    uint8_t size = 0;
+    while (last != NULL)
+    {
+        size++;
+        last = last->next;
+    }
+    return size;
+}
+void sysLogQueue_craftMessage(char *message, uint16_t length, interpreter_status_t *curStatus)
+{
+    // Bring in scope struct fields and pop element
+    action_return_t action = curStatus->action_return;
+    command_t command = curStatus->command;
+    interpreter_flag_t curStatusFlag = curStatus->status;
+
+    unsigned char **args = command.parameters;
+    uint8_t argsCount = command.paramsCount;
+
+    // Prepare args list
+    char argsList[384] = {'\0'};
+    for (uint8_t j = 0; j < argsCount; j++)
+    {
+        char *curArg = (char *)args[j];
+        char argStr[64];
+        snprintf(argStr, sizeof(argStr), "---> Arg %d: %s %s", j, curArg, NEWLINE_STR);
+        if (strlen(argsList) + strlen(argStr) + 1 < sizeof(argsList))
+        {
+            strncat((char *)argsList, argStr, strlen(argStr));
+        }
+    }
+    snprintf(message, length,
+             "---COMMAND DIAGNOSTIC--- %s"
+             "Command: %s Status: %d, Interpreter Status: %s %s"
+             "Message: %s %s"
+             "Args: %s %s",
+
+             NEWLINE_STR,
+             command.rootCommand, action.status, interpreter_flag_msg[curStatusFlag], NEWLINE_STR,
+             action.message, NEWLINE_STR,
+             argsList, NEWLINE_STR);
 }

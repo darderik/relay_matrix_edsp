@@ -82,13 +82,48 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
     {
         // WE Have received a string,add to ucq (if there is space)
         rx_buffer[Size] = '\0';
-        ucq_addElement(rx_buffer);
+        char msg[128] = {'\0'};
+        uint8_t res = ucq_addElement(rx_buffer);
         if (HANDSHAKE_SCPI && !is_query(rx_buffer))
         {
-            char message[8];
-            snprintf(message, sizeof(message), "OK%s", TERM_CHAR);
-            HAL_UART_Transmit(huart, (unsigned char *)message, strlen(message), HAL_MAX_DELAY);
+            snprintf(msg, sizeof(msg), "OK%s", TERM_CHAR);
+        }
+        else if (HANDSHAKE_SCPI && res == 1 && is_query(rx_buffer)) // res == 1 is error
+        {
+            // The command won't get a response, send empty response in order not to trigger timeout
+            snprintf(msg, sizeof(msg), "OK%s%s", TERM_CHAR, TERM_CHAR);
+        }
+        else if (!HANDSHAKE_SCPI && res == 1 && is_query(rx_buffer))
+        {
+            snprintf(msg, sizeof(msg), "%s", TERM_CHAR);
+        }
+        if (msg[0] != '\0')
+        {
+            HAL_UART_Transmit(huart, (unsigned char *)msg, strlen(msg), HAL_MAX_DELAY);
         }
     }
     HAL_UARTEx_ReceiveToIdle_DMA(huart, rx_buffer, MAX_COMMAND_LENGTH);
+}
+
+void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
+{
+    uint32_t errorCode;
+
+    if (huart->Instance == USART2)
+    {
+        errorCode = HAL_UART_GetError(huart);
+        if (errorCode != HAL_UART_ERROR_NONE)
+        {
+            if (QUEUE_MODE == DMA)
+            {
+                // Dma disabled, restart
+                HAL_UART_DMAStop(huart);
+                HAL_UARTEx_ReceiveToIdle_DMA(huart, rx_buffer, MAX_COMMAND_LENGTH);
+            }
+            else
+            {
+                HAL_UART_Receive_IT(huart, &rx_data_ptr, 1);
+            }
+        }
+    }
 }
