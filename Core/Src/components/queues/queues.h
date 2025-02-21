@@ -71,6 +71,7 @@ uint8_t ucq_getQueueSize();
 void ucq_popElement();
 void ucq_clearQueue();
 unparsed_entry_t *ucq_findElem(char *rootcmd);
+void ucq_appendCommand(unsigned char *command, uint8_t countList);
 
 //---Interpreter Status Queue Helper---
 void statusQueue_addElement(interpreter_status_t *status);

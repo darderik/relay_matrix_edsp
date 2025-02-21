@@ -43,8 +43,15 @@ void help(interpreter_status_t *int_status)
 }
 void sys_log(interpreter_status_t *int_status)
 {
-    char full_message[SYSLOG_SINGLE_MESSAGE_LENGTH * 6] = {'\0'};
-    sysLogQueue_getFullMessage(full_message, SYSLOG_SINGLE_MESSAGE_LENGTH);
+    uint16_t full_message_size = sysLogQueue_getTotalLength() + 1;
+    uint16_t effective_message_size = full_message_size > SYSLOG_SINGLE_MESSAGE_LENGTH * SYSLOG_MAX_MESSAGES
+                                          ? SYSLOG_SINGLE_MESSAGE_LENGTH * SYSLOG_MAX_MESSAGES
+                                          : full_message_size;
+    char full_message[effective_message_size];
+    // Initialize full message to null char
+    memset(full_message, '\0', effective_message_size);
+
+    sysLogQueue_getFullMessage(full_message, effective_message_size);
     action_return_addMessage(&(int_status->action_return), full_message, 1);
 }
 void sys_getstate(interpreter_status_t *int_status)
@@ -68,7 +75,7 @@ void idn(interpreter_status_t *int_status)
              (unsigned long)uid[1],
              (unsigned long)uid[2]);
     char full_message[96] = {'\0'};
-    snprintf(full_message, sizeof(full_message), "DIIEM,Relay Matrix,%s,V1.0%s", uid_string, TERM_CHAR);
+    snprintf(full_message, sizeof(full_message), "DIIEM,Relay Matrix,%s,V1.0", uid_string);
     action_return_addMessage(&(int_status->action_return), full_message, 1);
 }
 void opc(interpreter_status_t *int_status)

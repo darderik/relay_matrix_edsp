@@ -244,12 +244,17 @@ void strTolower(char *str)
     for (; *str; ++str)
         *str = tolower(*str);
 }
-int strcicmp(char const *a, char const *b)
+int strcicmp(const char *a, const char *b)
 {
-    for (;; a++, b++)
+    while (*a && *b)
     {
-        int d = tolower((unsigned char)*a) - tolower((unsigned char)*b);
-        if (d != 0 || !*a)
-            return d;
+        int diff = tolower((unsigned char)*a) - tolower((unsigned char)*b);
+        if (diff != 0)
+        {
+            return diff;
+        }
+        a++;
+        b++;
     }
+    return tolower((unsigned char)*a) - tolower((unsigned char)*b);
 }

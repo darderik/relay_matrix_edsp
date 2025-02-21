@@ -12,36 +12,40 @@ void sysLogQueue_addNode()
     if (statusQueue_list.head != NULL)
     {
         interpreter_status_t *curStatus = statusQueue_list.head->status;
-        statusQueue_popElement();
-        char message[SYSLOG_SINGLE_MESSAGE_LENGTH] = {'\0'};
-        sysLogQueue_craftMessage(message, SYSLOG_SINGLE_MESSAGE_LENGTH, curStatus);
-
-        syslog_entry_t *newNode = (syslog_entry_t *)malloc(sizeof(syslog_entry_t));
-        char *fullMessage = (char *)malloc(strlen(message) + 1);
-        strcpy(fullMessage, message);
-        newNode->message = fullMessage;
-        newNode->next = NULL;
-
-        if (syslog_head == NULL)
+        // Avoid adding diagnostic of sys log itself
+        if (strstr((char *)curStatus->command.rootCommand, "sys:log") == NULL)
         {
-            syslog_head = newNode;
-        }
-        else
-        {
-            if (sysLogQueue_getSize() >= SYSLOG_MAX_MESSAGES)
-            {
-                // FIFO mechanism
-                sysLogQueue_popNode();
-            }
+            char message[SYSLOG_SINGLE_MESSAGE_LENGTH] = {'\0'};
+            sysLogQueue_craftMessage(message, SYSLOG_SINGLE_MESSAGE_LENGTH, curStatus);
 
-            syslog_entry_t *last = syslog_head;
-            while (last->next != NULL)
+            syslog_entry_t *newNode = (syslog_entry_t *)malloc(sizeof(syslog_entry_t));
+            char *fullMessage = (char *)malloc(strlen(message) + 1);
+            strcpy(fullMessage, message);
+            newNode->message = fullMessage;
+            newNode->next = NULL;
+
+            if (syslog_head == NULL)
             {
-                last = last->next;
+                syslog_head = newNode;
             }
-            last->next = newNode;
+            else
+            {
+                if (sysLogQueue_getSize() >= SYSLOG_MAX_MESSAGES)
+                {
+                    // FIFO mechanism
+                    sysLogQueue_popNode();
+                }
+
+                syslog_entry_t *last = syslog_head;
+                while (last->next != NULL)
+                {
+                    last = last->next;
+                }
+                last->next = newNode;
+            }
         }
     }
+    statusQueue_popElement();
 }
 void sysLogQueue_addNodeManual(char *msg)
 {
@@ -88,7 +92,7 @@ void sysLogQueue_forceUpdate()
         sysLogQueue_addNode();
     }
 }
-void sysLogQueue_getFullMessage(char *fullMessage, uint16_t length)
+void sysLogQueue_getFullMessage(char *fullMessage, uint16_t size)
 {
     char *curTermChar = TERM_CHAR;
     uint8_t curTermCharLen = strlen(curTermChar);
@@ -96,12 +100,19 @@ void sysLogQueue_getFullMessage(char *fullMessage, uint16_t length)
     while (last != NULL)
     {
         char *curMsg = last->message;
-        snprintf(fullMessage + strlen(fullMessage), length - curTermCharLen - strlen(fullMessage), "%s", curMsg);
+        int remainingLength = size - strlen(fullMessage) - curTermCharLen - 1;
+        if (remainingLength > 0)
+        {
+            strncat(fullMessage, curMsg, remainingLength);
+        }
         last = last->next;
         sysLogQueue_popNode();
     }
-    // Pointer arithmetic
-    snprintf(fullMessage + strlen(fullMessage), length - strlen(fullMessage), "%s", curTermChar);
+    //   // Ensure there is enough space for the termination character
+    //   if (size > strlen(fullMessage))
+    //   {
+    //       strncat(fullMessage, curTermChar, size - strlen(fullMessage) - 1);
+    //   }
 }
 uint16_t sysLogQueue_getTotalLength()
 {

@@ -4,6 +4,7 @@
 #include "command.h"
 #include "main.h"
 #include "callbacks.h"
+#include <string.h>
 
 const char *interpreter_flag_msg[] = {"OK", "INVALID COMMAND", "INVALID ARGS"};
 
@@ -48,7 +49,8 @@ void interpretAndExecuteCommand(interpreter_status_t *int_status)
                 // Return data if needed, uart transmit of action_return data
                 if (int_status->action_return.toTransmit)
                 {
-                    uint8_t fullMsg[strlen((char *)int_status->action_return.message) + 8];
+                    char fullMsg[strlen((char *)int_status->action_return.message) + 8];
+                    memset(fullMsg, '\0', sizeof(fullMsg));
                     if (HANDSHAKE_SCPI)
                     {
                         snprintf((char *)fullMsg, sizeof(fullMsg), "%s%s%s%s", int_status->action_return.message, TERM_CHAR, "OK", TERM_CHAR);
@@ -57,19 +59,19 @@ void interpretAndExecuteCommand(interpreter_status_t *int_status)
                     {
                         snprintf((char *)fullMsg, sizeof(fullMsg), "%s%s", int_status->action_return.message, TERM_CHAR);
                     }
-                    HAL_UART_Transmit(&huart2, fullMsg, strlen((char *)fullMsg), HAL_MAX_DELAY);
+                    HAL_UART_Transmit(&huart2, (uint8_t *)fullMsg, strlen((char *)fullMsg), HAL_MAX_DELAY);
                 }
                 break;
             }
         }
         if (!found)
         {
-            char fullMsg[16];
+            char fullMsg[64];
             if (is_query(curCommandPtr->rootCommand))
             {
                 if (HANDSHAKE_SCPI)
                 {
-                    snprintf(fullMsg, sizeof(fullMsg), "%s%s%s", TERM_CHAR, "OK", TERM_CHAR);
+                    snprintf(fullMsg, sizeof(fullMsg), "NO_QUERY%s%s%s", TERM_CHAR, "OK", TERM_CHAR);
                     HAL_UART_Transmit(&huart2, (uint8_t *)fullMsg, strlen((char *)fullMsg), HAL_MAX_DELAY);
                 }
             }

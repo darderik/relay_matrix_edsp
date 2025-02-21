@@ -98,13 +98,15 @@ void state_handler(UART_HandleTypeDef *huart, SPI_HandleTypeDef *hspi)
         break;
     case FAIL:
         // Wait for SYS:LOG? Command
-        if (ucq_findElem("sys:log?") != NULL)
+        if (ucq_findElem("sys:log?\n") != NULL)
         {
             // Exit fail state, and output everything
-            state_set(IDLE);
+            state_set(LOG);
         }
         else
         {
+            // Wipe UCQ
+            // ucq_clearQueue();
             HAL_Delay(5);
         }
         break;
