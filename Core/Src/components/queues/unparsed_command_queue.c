@@ -4,8 +4,27 @@
 #include "fsm.h"
 #include "callbacks.h"
 #include "queues.h"
+#include <string.h>
 //--------------------Unparsed Command Queue Helper--------------------
 
+void ucq_appendCommand(unsigned char *command, uint8_t countList)
+{
+    // Create a new entry
+    unparsed_entry_t *newEntry = (unparsed_entry_t *)malloc(sizeof(unparsed_entry_t));
+    strcpy((char *)newEntry->command, (char *)command);
+    newEntry->next = NULL;
+    // If the queue is empty, set the new entry as the head
+    if (unparsed_list.head == NULL)
+    {
+        // One element
+        unparsed_list.head = newEntry;
+    }
+    else
+    {
+        unparsed_list.tail->next = newEntry;
+    }
+    unparsed_list.tail = newEntry;
+}
 /**
  * @brief Adds a new command to the unparsed command queue. If the queue is already at
  *        its maximum size, the command is discarded and the system is put into the FAIL state.
@@ -17,21 +36,14 @@ uint8_t ucq_addElement(unsigned char *command)
     uint8_t countList = ucq_getQueueSize();
     if (!(countList >= MAX_COMMAND_QUEUE_SIZE))
     {
-        // Create a new entry
-        unparsed_entry_t *newEntry = (unparsed_entry_t *)malloc(sizeof(unparsed_entry_t));
-        strcpy((char *)newEntry->command, (char *)command);
-        newEntry->next = NULL;
-        // If the queue is empty, set the new entry as the head
-        if (unparsed_list.head == NULL)
+        if (state_get() != FAIL)
         {
-            // One element
-            unparsed_list.head = newEntry;
+            ucq_appendCommand(command, countList);
         }
-        else
+        else if (strstr((char *)command, "sys:log") != NULL)
         {
-            unparsed_list.tail->next = newEntry;
+            ucq_appendCommand(command, countList);
         }
-        unparsed_list.tail = newEntry;
     }
     else
     {
@@ -146,6 +158,7 @@ unparsed_entry_t *ucq_findElem(char *rootcmd)
             found = curElem;
             break;
         }
+        curElem = curElem->next;
     }
     return found;
 }
