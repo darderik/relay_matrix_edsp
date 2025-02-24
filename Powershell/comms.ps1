@@ -62,7 +62,7 @@ $CommandList = @(
 )
 #Setup della COM3
 #Baudrate = 9600, Terminator: \r\n, Encoding: ASCII, Databits: 8, Parity: None, Stopbits: 1
-[System.IO.Ports.SerialPort] $SerialPort = openComPort 3 115200
+[System.IO.Ports.SerialPort] $SerialPort = openComPort 6 115200
 $SerialPort.Encoding = [System.Text.Encoding]::ASCII
     
 
@@ -72,7 +72,7 @@ try {
         foreach ($cmd in $CommandList) {
             $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
             $SerialPort.WriteLine($cmd)
-            while (-not $SerialPort.ReadExisting() -contains "|CTS|") {}
+            while (-not $SerialPort.ReadExisting() -contains "OK") {}
             # Received CTS
             $stopwatch.Stop()
             Write-Host "Tempo trascorso: $($stopwatch.Elapsed.TotalMilliseconds) ms"
