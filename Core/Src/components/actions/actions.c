@@ -15,7 +15,7 @@ const command_table_entry_t command_table[] = {
     {(unsigned char *)"switch:commute", switch_commute_handler},
     {(unsigned char *)"sys:log?", sys_log},
     {(unsigned char *)"sys:getstate?", sys_getstate},
-    {(unsigned char *)"switch:commute:status?", switch_commute_handler},
+    {(unsigned char *)"switch:commute:status?", switch_commute_status},
     {(unsigned char *)"switch:commute:exclusive", switch_commute_handler},
     {(unsigned char *)"switch:commute:reset", switch_commute_handler},
     {(unsigned char *)"switch:commute:reset:all", switch_commute_reset_all},

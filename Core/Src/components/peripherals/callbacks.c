@@ -91,12 +91,13 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
         else if (HANDSHAKE_SCPI && res == 1 && is_query(rx_buffer)) // res == 1 is error
         {
             // The command won't get a response, send empty response in order not to trigger timeout
-            snprintf(msg, sizeof(msg), "OK%s%s", TERM_CHAR, TERM_CHAR);
+            snprintf(msg, sizeof(msg), "%sOK%s", TERM_CHAR, TERM_CHAR);
         }
         else if (!HANDSHAKE_SCPI && res == 1 && is_query(rx_buffer))
         {
             snprintf(msg, sizeof(msg), "%s", TERM_CHAR);
         }
+        // Check if there is a message to send
         if (msg[0] != '\0')
         {
             HAL_UART_Transmit(huart, (unsigned char *)msg, strlen(msg), HAL_MAX_DELAY);

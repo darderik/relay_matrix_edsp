@@ -10,63 +10,60 @@
 #include "fsm.h"
 #include "string.h"
 #include <stdlib.h>
+void switch_commute_status(interpreter_status_t *int_status)
+{
+    int_status->action_return.toTransmit = 1;
+    // Check all relays and make AND
+    uint8_t isPowered = 1;
+    for (uint8_t i = 0; i < sizeof(relayGroups) / sizeof(relay_group_t); i++)
+    {
+        isPowered &= checkResetStatus(&relayGroups[i], int_status, 1);
+        if (!isPowered)
+        {
+            break;
+        }
+    }
+}
 
 // SWITCH:COMMUTE --------------------------------------------------------------
 void switch_commute_handler(interpreter_status_t *int_status)
 {
     command_t commandData = int_status->command;
-    if (strcicmp((char *)commandData.rootCommand, "SWITCH:COMMUTE:STATUS?") == 0)
+    uint8_t curIn, curOut;
+    for (uint8_t i = 0; i < commandData.paramsCount; i++)
     {
-        int_status->action_return.toTransmit = 1;
-        // Check all relays and make AND
-        uint8_t isPowered = 1;
-        for (uint8_t i = 0; i < sizeof(relayGroups) / sizeof(relay_group_t); i++)
+        // ROOT:CMD A1 B2 C3 ... D1
+        unsigned char *curParam = commandData.parameters[i];
+        curIn = (uint8_t)curParam[0] - 'a'; // Convert a-c to 0-3
+        curOut = curParam[1] - '0' - 1;     // Convert '1'-'4' to 0-3
+        if (checkParamsSelector(curIn, curOut, int_status))
         {
-            isPowered &= checkResetStatus(&relayGroups[i], int_status, 1);
-            if (!isPowered)
+            if (checkResetStatus(&relayGroups[curIn], int_status, 0))
             {
-                break;
-            }
-        }
-    }
-    else
-    {
-        uint8_t curIn, curOut;
-        for (uint8_t i = 0; i < commandData.paramsCount; i++)
-        {
-            // ROOT:CMD A1 B2 C3 ... D1
-            unsigned char *curParam = commandData.parameters[i];
-            curIn = (uint8_t)curParam[0] - 'a'; // Convert a-c to 0-3
-            curOut = curParam[1] - '0' - 1;     // Convert '1'-'4' to 0-3
-            if (checkParamsSelector(curIn, curOut, int_status))
-            {
-                if (checkResetStatus(&relayGroups[curIn], int_status, 0))
+                // Maybe hash comparison?
+                if (strcicmp((char *)commandData.rootCommand, "SWITCH:COMMUTE:EXCLUSIVE") == 0)
                 {
-                    // Maybe hash comparison?
-                    if (strcicmp((char *)commandData.rootCommand, "SWITCH:COMMUTE:EXCLUSIVE") == 0)
-                    {
-                        switch_commute_exclusive(int_status, curIn, curOut);
-                    }
-                    else if (strcicmp((char *)commandData.rootCommand, "SWITCH:COMMUTE:RESET") == 0)
-                    {
-                        switch_commute_reset(int_status, curIn, curOut);
-                    }
-                    else if (strcicmp((char *)commandData.rootCommand, "SWITCH:COMMUTE") == 0)
-                    {
-                        switch_commute(int_status, curIn, curOut);
-                    }
+                    switch_commute_exclusive(int_status, curIn, curOut);
                 }
-                else
+                else if (strcicmp((char *)commandData.rootCommand, "SWITCH:COMMUTE:RESET") == 0)
                 {
-                    // No power on relay
-                    int_status->action_return.status = ACTION_ERROR;
+                    switch_commute_reset(int_status, curIn, curOut);
+                }
+                else if (strcicmp((char *)commandData.rootCommand, "SWITCH:COMMUTE") == 0)
+                {
+                    switch_commute(int_status, curIn, curOut);
                 }
             }
             else
             {
-                // Invalid args
-                int_status->status = INTERPRETER_INVALID_ARGS;
+                // No power on relay
+                int_status->action_return.status = ACTION_ERROR;
             }
+        }
+        else
+        {
+            // Invalid args
+            int_status->status = INTERPRETER_INVALID_ARGS;
         }
     }
 }
@@ -233,20 +230,13 @@ uint8_t checkResetStatus(relay_group_t *curGroup, interpreter_status_t *int_stat
     {
         int_status->action_return.status = ACTION_ERROR;
         char *msg = "TPL9201: ERR Power RST 0";
-        if (queryMode)
-        {
-            action_return_addMessage(&(int_status->action_return), msg, 1);
-        }
-        else
-        {
-            action_return_addMessage(&(int_status->action_return), msg, 0);
-        }
+        action_return_addMessage(&(int_status->action_return), msg, queryMode ? 1 : 0);
         return 0;
     }
-    else if (queryMode)
+    else
     {
         char *msg = "TPL9201: OK Power RST 1";
-        action_return_addMessage(&(int_status->action_return), msg, 1);
+        action_return_addMessage(&(int_status->action_return), msg, queryMode ? 1 : 0);
     }
     return 1;
 }

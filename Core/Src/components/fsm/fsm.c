@@ -147,7 +147,8 @@ void sys_boot_check()
         // PWR_OK Not reached, fail state
         unsigned char msg[96];
         snprintf((char *)msg, sizeof(msg), "sys:boot->PWR_OK not reached.ATX PSU Malfunctioning.Stopping..%s", TERM_CHAR);
-        HAL_UART_Transmit(&huart2, (uint8_t *)msg, strlen((char *)msg), HAL_MAX_DELAY);
+        sysLogQueue_addNodeManual(msg);
+        // HAL_UART_Transmit(&huart2, (uint8_t *)msg, strlen((char *)msg), HAL_MAX_DELAY);
         state_set(FAIL);
     }
 }
