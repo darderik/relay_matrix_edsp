@@ -11,5 +11,5 @@ void switch_commute_exclusive(interpreter_status_t *int_status, uint8_t curIn, u
 void switch_commute_reset(interpreter_status_t *int_status, uint8_t curIn, uint8_t curOut);
 void switch_commute_reset_all(interpreter_status_t *int_status);
 void switch_commute_handler(interpreter_status_t *int_status);
-
+void manualReset(relay_group_t *curGroup);
 GPIO_PinState configAndRead(GPIO_TypeDef *GPIOx, uint16_t Pin);
