@@ -62,7 +62,7 @@ $CommandList = @(
 )
 #Setup della COM3
 #Baudrate = 9600, Terminator: \r\n, Encoding: ASCII, Databits: 8, Parity: None, Stopbits: 1
-[System.IO.Ports.SerialPort] $SerialPort = openComPort 6 115200
+[System.IO.Ports.SerialPort] $SerialPort = openComPort 11 115200
 $SerialPort.Encoding = [System.Text.Encoding]::ASCII
     
 
@@ -76,8 +76,9 @@ try {
             # Received CTS
             $stopwatch.Stop()
             Write-Host "Tempo trascorso: $($stopwatch.Elapsed.TotalMilliseconds) ms"
+            Start-Sleep -Seconds 2
         }
-        Start-Sleep -Milliseconds 2000
+        Start-Sleep -Seconds 5
     }
 }
 finally {

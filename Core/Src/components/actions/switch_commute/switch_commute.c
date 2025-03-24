@@ -86,18 +86,48 @@ void switch_commute_reset_all(interpreter_status_t *int_status)
             switch (SWITCH_COMMUTE_MODE)
             {
             case SWITCH_SSR:
-                HAL_GPIO_WritePin(curGroup->gpio_port_nrst, curGroup->nrst_pin, GPIO_PIN_RESET);
-                waitMultiple20ns(4);
-                HAL_GPIO_WritePin(curGroup->gpio_port_nrst, curGroup->nrst_pin, GPIO_PIN_SET);
+                transmitSPI(curGroup, 0, 0);
                 break;
             case SWITCH_EMR:
                 transmitSPI(curGroup, RSTBYTE, 1);
-                HAL_Delay(8);
             default:
                 break;
             }
+            curGroup->statusByte = 0;
         }
     }
+}
+
+void switch_commute_byte_status(interpreter_status_t *int_status)
+{
+    char message[64] = {0};
+    uint8_t statusByte;
+    uint8_t representativeByte;
+    relay_group_t *curGroup;
+
+    for (size_t i = 0; i < sizeof(relayGroups) / sizeof(relay_group_t); i++)
+    {
+        curGroup = &relayGroups[i];
+        statusByte = curGroup->statusByte;
+
+        representativeByte = ((statusByte & 0b01) << 3) |
+                             ((statusByte & 0b100) >> 0) |
+                             ((statusByte & 0b10000) >> 3) |
+                             ((statusByte & 0b1000000) >> 6);
+
+        char curMsg[16] = {0};
+        uint8_to_bin(representativeByte, curMsg);
+        char trimmedMsg[5];
+        strncpy(trimmedMsg, curMsg + 4, 4);
+        trimmedMsg[4] = '\0';
+        if (i > 0)
+        {
+            strncat(message, ",", sizeof(message) - strlen(message) - 1);
+        }
+        strncat(message, trimmedMsg, sizeof(message) - strlen(message) - 1);
+    }
+
+    action_return_addMessage(&(int_status->action_return), message, 1);
 }
 /**
  * @brief      SWITCH:COMMUTE command. This command is used to activate/deactivate coils
@@ -117,11 +147,12 @@ void switch_commute(interpreter_status_t *int_status, uint8_t curIn, uint8_t cur
     {
     case SWITCH_EMR:
         byteP = byteP << curOut * 2;
+        curGroup->statusByte |= byteP;
         transmitSPI(curGroup, byteP, 1);
         break;
     case SWITCH_SSR:
-        byteP = curGroup->oldByte | (0b01 << 2 * curOut);
-        curGroup->oldByte = byteP;
+        byteP = curGroup->statusByte | (0b01 << 2 * curOut);
+        curGroup->statusByte = byteP;
         transmitSPI(curGroup, byteP, 0);
         break;
     }
@@ -146,12 +177,14 @@ void switch_commute_exclusive(interpreter_status_t *int_status, uint8_t curIn, u
     case SWITCH_EMR:
         // If EMR, the exclusive mode translates in an OR bitwise between byteP and rstByte without a specific reset coil(all the others are reset)
         byteP = byteP << curOut * 2;
+        // Assign statusByte before correcting it with reset coils
+        curGroup->statusByte = byteP;
         byteP = byteP | (RSTBYTE - (byteP << 1));
         transmitSPI(curGroup, byteP, 1);
         break;
     case SWITCH_SSR:
         byteP = 0b01 << 2 * curOut;
-        curGroup->oldByte = byteP;
+        curGroup->statusByte = byteP;
         transmitSPI(curGroup, byteP, 0);
         break;
     default:
@@ -178,12 +211,13 @@ void switch_commute_reset(interpreter_status_t *int_status, uint8_t curIn, uint8
     case SWITCH_EMR:
         byteP = byteP << (curOut * 2 + 1);
         transmitSPI(curGroup, byteP, 1);
+        curGroup->statusByte &= ~byteP >> 1;
         break;
     case SWITCH_SSR:
         byteP = byteP << curOut * 2;
-        byteP = curGroup->oldByte & ~byteP;
+        byteP = curGroup->statusByte & ~byteP;
+        curGroup->statusByte = byteP;
         transmitSPI(curGroup, byteP, 0);
-        curGroup->oldByte = byteP;
         break;
     default:
         break;
@@ -240,7 +274,6 @@ uint8_t checkResetStatus(relay_group_t *curGroup, interpreter_status_t *int_stat
     }
     return 1;
 }
-
 /**
  * @brief      Transmit a byte over SPI to the relay group.
  *
@@ -260,8 +293,8 @@ void transmitSPI(relay_group_t *curGroup, uint8_t byteP, uint8_t isLatching)
     HAL_GPIO_WritePin(curGroup->gpio_port_ncs, curGroup->ncs_pin, GPIO_PIN_SET);
     if (isLatching)
     {
-        HAL_Delay(5);          // Debounce, HFD2-012-S-L2 Datasheet
-        manualReset(curGroup); // Reset the coils
+        HAL_Delay(30);         // Debounce, HFD2-012-S-L2 Datasheet
+        manualReset(curGroup); // Open Drain OFF
         waitMultiple20ns(10);  // Delay before next word
     }
 }
@@ -272,8 +305,9 @@ void transmitSPI(relay_group_t *curGroup, uint8_t byteP, uint8_t isLatching)
  */
 void manualReset(relay_group_t *curGroup)
 {
+    uint8_t null_msg = 0;
     HAL_GPIO_WritePin(curGroup->gpio_port_ncs, curGroup->ncs_pin, GPIO_PIN_RESET);
-    HAL_SPI_Transmit(&hspi1, 0, 1, HAL_MAX_DELAY);
+    HAL_SPI_Transmit(&hspi1, &null_msg, 1, HAL_MAX_DELAY);
     HAL_GPIO_WritePin(curGroup->gpio_port_ncs, curGroup->ncs_pin, GPIO_PIN_SET);
 }
 GPIO_PinState configAndRead(GPIO_TypeDef *GPIOx, uint16_t Pin)
@@ -282,4 +316,12 @@ GPIO_PinState configAndRead(GPIO_TypeDef *GPIOx, uint16_t Pin)
     waitMultiple20ns(10);
     GPIO_PinState pinState = HAL_GPIO_ReadPin(GPIOx, Pin);
     return pinState;
+}
+void uint8_to_bin(uint8_t num, char *str)
+{
+    for (int i = 7; i >= 0; i--)
+    {
+        str[7 - i] = (num & (1 << i)) ? '1' : '0';
+    }
+    str[8] = '\0'; // Null terminator
 }
