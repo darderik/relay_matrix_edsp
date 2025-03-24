@@ -55,7 +55,7 @@ typedef struct
     GPIO_TypeDef *gpio_port_nrst;
     uint16_t ncs_pin;
     uint16_t nrst_pin;
-    uint8_t oldByte;
+    uint8_t statusByte;
 } relay_group_t;
 extern relay_group_t relayGroups[4];
 
