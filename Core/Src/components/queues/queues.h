@@ -7,6 +7,7 @@
 
 extern unsigned char rx_data_ptr;
 extern unsigned char rx_buffer[MAX_COMMAND_LENGTH + 1];
+extern unsigned char rx_buffer_temp[MAX_COMMAND_LENGTH + 1];
 //---Unparsed Command Queue---
 
 /**

@@ -67,17 +67,22 @@ void interpretAndExecuteCommand(interpreter_status_t *int_status)
         }
         if (!found)
         {
-            char fullMsg[64];
-            memset(fullMsg, '\0', sizeof(fullMsg));
-            if (is_query(curCommandPtr->rootCommand))
-            {
-                if (HANDSHAKE_SCPI)
-                {
-                    snprintf(fullMsg, sizeof(fullMsg), "NO_QUERY%s%s%s", TERM_CHAR, "OK", TERM_CHAR);
-                    HAL_UART_Transmit(&huart2, (uint8_t *)fullMsg, strlen((char *)fullMsg), HAL_MAX_DELAY);
-                }
-            }
             int_status->status = INTERPRETER_INVALID_COMMAND;
         }
     }
 }
+//        if (!found)
+//        {
+//            char fullMsg[64];
+//            memset(fullMsg, '\0', sizeof(fullMsg));
+//            if (is_query(curCommandPtr->rootCommand))
+//            {
+//                if (HANDSHAKE_SCPI)
+//                {
+//                    snprintf(fullMsg, sizeof(fullMsg), "NO_QUERY%s%s%s", TERM_CHAR, "OK", TERM_CHAR);
+//                    HAL_UART_Transmit(&huart2, (uint8_t *)fullMsg, strlen((char *)fullMsg), HAL_MAX_DELAY);
+//                }
+//            }
+//            int_status->status = INTERPRETER_INVALID_COMMAND;
+//        }
+//    }

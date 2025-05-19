@@ -14,7 +14,7 @@ static uint32_t lastTick;
 uint8_t is_query(unsigned char *command)
 {
     // Contains '?'
-    return strchr((char *)command, '?') != NULL;
+    return strchr((char *)command, (uint8_t)'?') != NULL;
 }
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
@@ -35,7 +35,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
                 if (HANDSHAKE_SCPI && !is_query(rx_buffer))
                 {
                     unsigned char handshake[8];
-                    snprintf((char *)handshake, sizeof(handshake), "OK%s", TERM_CHAR);
+                    snprintf((char *)handshake, sizeof(handshake), "OK%s", (char *)TERM_CHAR);
                     HAL_UART_Transmit(huart, (uint8_t *)handshake, strlen((char *)handshake), HAL_MAX_DELAY);
                 }
                 inProgress = 0;
@@ -79,32 +79,87 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
 {
     char msg[128] = {'\0'};
+
     if (huart->Instance == USART2)
     {
-        // WE Have received a string,add to ucq (if there is space)
-        rx_buffer[Size] = '\0';
-        uint8_t res = ucq_addElement(rx_buffer);
-        if (HANDSHAKE_SCPI && !is_query(rx_buffer))
+        // 1. Immediate copy to avoid DMA buffer overwrite
+        char local_buf[MAX_COMMAND_LENGTH + 1];
+        memcpy(local_buf, rx_buffer, Size);
+        local_buf[Size] = '\0'; // Ensures null termination
+
+        // 2. Reactivate DMA reception IMMEDIATELY
+        HAL_UARTEx_ReceiveToIdle_DMA(huart, rx_buffer, MAX_COMMAND_LENGTH);
+
+        // 3. Check if the terminator is present
+        int term_char_present = (strstr(local_buf, TERM_CHAR) != NULL);
+
+        if (term_char_present)
         {
-            snprintf(msg, sizeof(msg), "OK%s", TERM_CHAR);
+            // 4. Command completed, assemble any previous part
+            if (inProgress > 0)
+            {
+                if (inProgress + Size < MAX_COMMAND_LENGTH)
+                {
+                    memcpy(rx_buffer_temp + inProgress, local_buf, Size);
+                    rx_buffer_temp[inProgress + Size] = '\0';
+                }
+                else
+                {
+                    // Overflow, reset temp buffer
+                    inProgress = 0;
+                    memset(rx_buffer_temp, 0, MAX_COMMAND_LENGTH);
+                    return;
+                }
+                inProgress = 0;
+            }
+            else
+            {
+                memcpy(rx_buffer_temp, local_buf, Size);
+                rx_buffer_temp[Size] = '\0';
+            }
+
+            // 5. Send to the queue
+            uint8_t res = ucq_addElement(rx_buffer_temp);
+
+            // 6. Handshake response
+            if (HANDSHAKE_SCPI && !is_query(rx_buffer_temp))
+            {
+                snprintf(msg, sizeof(msg), "OK%s", TERM_CHAR);
+            }
+            else if (HANDSHAKE_SCPI && res == 1 && is_query(rx_buffer_temp))
+            {
+                snprintf(msg, sizeof(msg), "ERR:FULL_QUEUE%sOK%s", TERM_CHAR, TERM_CHAR);
+            }
+            else if (!HANDSHAKE_SCPI && res == 1 && is_query(rx_buffer_temp))
+            {
+                snprintf(msg, sizeof(msg), "ERR:FULL_QUEUE%s", TERM_CHAR);
+            }
+
+            // 7. Reset the temporary buffer
+            memset(rx_buffer_temp, 0, MAX_COMMAND_LENGTH);
         }
-        else if (HANDSHAKE_SCPI && res == 1 && is_query(rx_buffer)) // res == 1 is error
+        else
         {
-            // The command won't get a response, send empty response in order not to trigger timeout
-            snprintf(msg, sizeof(msg), "%sOK%s", TERM_CHAR, TERM_CHAR);
-        }
-        else if (!HANDSHAKE_SCPI && res == 1 && is_query(rx_buffer))
-        {
-            snprintf(msg, sizeof(msg), "%s", TERM_CHAR);
+            // 8. Incomplete command, accumulate
+            if (inProgress + Size < MAX_COMMAND_LENGTH)
+            {
+                memcpy(rx_buffer_temp + inProgress, local_buf, Size);
+                inProgress += Size;
+                rx_buffer_temp[inProgress] = '\0';
+            }
+            else
+            {
+                // Overflow, reset buffer
+                inProgress = 0;
+                memset(rx_buffer_temp, 0, MAX_COMMAND_LENGTH);
+            }
         }
 
-    }
-    memset(rx_buffer, '\0', sizeof(rx_buffer[0]) * MAX_COMMAND_LENGTH);
-    HAL_UARTEx_ReceiveToIdle_DMA(huart, rx_buffer, MAX_COMMAND_LENGTH);
-    // Check if there is a message to send
-    if (msg[0] != '\0')
-    {
-        HAL_UART_Transmit(huart, (unsigned char *)msg, strlen(msg), HAL_MAX_DELAY);
+        // 9. Transmit any response message
+        if (msg[0] != '\0')
+        {
+            HAL_UART_Transmit(huart, (unsigned char *)msg, strlen(msg), HAL_MAX_DELAY);
+        }
     }
 }
 
@@ -117,6 +172,7 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
         errorCode = HAL_UART_GetError(huart);
         if (errorCode != HAL_UART_ERROR_NONE)
         {
+
             if (QUEUE_MODE == DMA)
             {
                 // Dma disabled, restart
@@ -127,6 +183,10 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
             {
                 HAL_UART_Receive_IT(huart, &rx_data_ptr, 1);
             }
+            char msg[64];
+            snprintf(msg, sizeof(msg), "UART Error: %lu", errorCode);
+            // Add to syslog
+            sysLogQueue_addNodeManual((char *)msg);
         }
     }
 }

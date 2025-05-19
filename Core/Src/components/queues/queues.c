@@ -8,7 +8,7 @@
 //---UART RX Buffer---
 unsigned char rx_data_ptr;
 unsigned char rx_buffer[MAX_COMMAND_LENGTH + 1];
-
+unsigned char rx_buffer_temp[MAX_COMMAND_LENGTH + 1];
 //--------------------Unparsed Command Queue --------------------
 // Head for unparsed command queue
 unparsed_list_container_t unparsed_list;
