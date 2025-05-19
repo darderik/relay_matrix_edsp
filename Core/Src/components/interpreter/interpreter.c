@@ -59,6 +59,7 @@ void interpretAndExecuteCommand(interpreter_status_t *int_status)
                     {
                         snprintf((char *)fullMsg, sizeof(fullMsg), "%s%s", int_status->action_return.message, TERM_CHAR);
                     }
+
                     HAL_UART_Transmit(&huart2, (uint8_t *)fullMsg, strlen((char *)fullMsg), HAL_MAX_DELAY);
                 }
                 break;
@@ -67,6 +68,7 @@ void interpretAndExecuteCommand(interpreter_status_t *int_status)
         if (!found)
         {
             char fullMsg[64];
+            memset(fullMsg, '\0', sizeof(fullMsg));
             if (is_query(curCommandPtr->rootCommand))
             {
                 if (HANDSHAKE_SCPI)
