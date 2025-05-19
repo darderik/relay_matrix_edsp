@@ -78,11 +78,11 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 
 void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
 {
+    char msg[128] = {'\0'};
     if (huart->Instance == USART2)
     {
         // WE Have received a string,add to ucq (if there is space)
         rx_buffer[Size] = '\0';
-        char msg[128] = {'\0'};
         uint8_t res = ucq_addElement(rx_buffer);
         if (HANDSHAKE_SCPI && !is_query(rx_buffer))
         {
@@ -97,13 +97,15 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
         {
             snprintf(msg, sizeof(msg), "%s", TERM_CHAR);
         }
-        // Check if there is a message to send
-        if (msg[0] != '\0')
-        {
-            HAL_UART_Transmit(huart, (unsigned char *)msg, strlen(msg), HAL_MAX_DELAY);
-        }
+
     }
+    memset(rx_buffer, '\0', sizeof(rx_buffer[0]) * MAX_COMMAND_LENGTH);
     HAL_UARTEx_ReceiveToIdle_DMA(huart, rx_buffer, MAX_COMMAND_LENGTH);
+    // Check if there is a message to send
+    if (msg[0] != '\0')
+    {
+        HAL_UART_Transmit(huart, (unsigned char *)msg, strlen(msg), HAL_MAX_DELAY);
+    }
 }
 
 void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
