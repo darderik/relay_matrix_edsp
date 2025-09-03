@@ -32,15 +32,16 @@ void ucq_appendCommand(unsigned char *command, uint8_t countList)
  */
 uint8_t ucq_addElement(unsigned char *command)
 {
-    // This is thread safe because only executed during a callback
     uint8_t countList = ucq_getQueueSize();
     if (!(countList >= MAX_COMMAND_QUEUE_SIZE))
     {
+        char sys_log_cmd[32] = "sys:log?";
+        strcat((char *)sys_log_cmd, TERM_CHAR);
         if (state_get() != FAIL)
         {
             ucq_appendCommand(command, countList);
         }
-        else if (strstr((char *)command, "sys:log") != NULL)
+        else if (strcicmp((char *)command, sys_log_cmd) == 0)
         {
             ucq_appendCommand(command, countList);
         }

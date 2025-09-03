@@ -48,7 +48,7 @@ uint8_t preParseCommand(unsigned char *cleanedString)
     return res;
 }
 /**
- * @brief Cleans the command string by replacing multiple spaces with a single space and removing leading/trailing spaces.
+ * @brief Cleans the command string by removing control characters, replacing multiple spaces with a single space and removing leading/trailing spaces.
  *
  * @param command_string The original command string.
  * @return char* The cleaned command string.
@@ -63,6 +63,13 @@ unsigned char *cleanCmd(unsigned char *command_string)
     for (size_t i = 0; i < command_length; i++)
     {
         unsigned char current_character = command_string[i];
+
+        // Skip control characters (like \r, \n, etc.) and non-printable characters
+        if (iscntrl(current_character) && current_character != '\t')
+        {
+            continue;
+        }
+
         if (isspace(current_character))
         {
             if (!in_space && cleaned_string_index > 0 && cleaned_string_index < command_length - 1)
@@ -71,7 +78,7 @@ unsigned char *cleanCmd(unsigned char *command_string)
                 in_space = 1;
             }
         }
-        else
+        else if (isprint(current_character))
         {
             cleaned_string[cleaned_string_index++] = tolower(current_character);
             in_space = 0;
