@@ -5,6 +5,7 @@
 #include "parser.h"
 #include "queues.h"
 #include "interpreter.h"
+#include "callbacks.h"
 
 state_t state = INIT;
 static uint8_t mcu_firstRun = 1;
@@ -37,20 +38,17 @@ void state_handler(UART_HandleTypeDef *huart, SPI_HandleTypeDef *hspi)
         if (mcu_firstRun)
         {
             mcu_firstRun = 0;
-            if (QUEUE_MODE == DMA)
-            {
-                HAL_UARTEx_ReceiveToIdle_DMA(huart, rx_buffer, MAX_COMMAND_LENGTH);
-            }
-            else
-            {
-                HAL_UART_Receive_IT(huart, &rx_data_ptr, 1);
-            }
+            HAL_UARTEx_ReceiveToIdle_DMA(huart, rx_buffer, MAX_COMMAND_LENGTH);
         }
         break;
 
     case IDLE:
         // Switch to interpret state if there is a command
-        if (unparsed_list.head != NULL)
+        if (prequeue_has_elements())
+        {
+            state_set(MIRROR);
+        }
+        else if (unparsed_list.head != NULL)
         {
             // Command received
             state_set(INTERPRET);
@@ -60,6 +58,10 @@ void state_handler(UART_HandleTypeDef *huart, SPI_HandleTypeDef *hspi)
             state_set(LOG);
         }
         break;
+    case MIRROR:
+        // Copy from prequeue to UCQ
+        prequeue_to_ucq();
+        state_set(IDLE);
 
     case INTERPRET:
         if (unparsed_list.head != NULL)
@@ -82,7 +84,7 @@ void state_handler(UART_HandleTypeDef *huart, SPI_HandleTypeDef *hspi)
     case LOG:
         if (statusQueue_getSize() != 0)
         {
-            sysLogQueue_addNode();
+            statusQueue_popElement();
         }
         state_set(IDLE);
         break;

@@ -7,11 +7,11 @@
 
 syslog_entry_t *syslog_head = NULL;
 
-void sysLogQueue_addNode()
+void sysLogQueue_addNode(interpreter_status_entry_t *statusEntry)
 {
-    if (statusQueue_list.head != NULL)
+    if (statusEntry != NULL)
     {
-        interpreter_status_t *curStatus = statusQueue_list.head->status;
+        interpreter_status_t *curStatus = statusEntry->status;
         // Avoid adding diagnostic of sys log itself
         if (strstr((char *)curStatus->command.rootCommand, "sys:log") == NULL)
         {
@@ -45,7 +45,6 @@ void sysLogQueue_addNode()
             }
         }
     }
-    statusQueue_popElement();
 }
 void sysLogQueue_addNodeManual(char *msg)
 {
@@ -83,13 +82,6 @@ void sysLogQueue_popNode()
         syslog_head = syslog_head->next;
         free(last->message);
         free(last);
-    }
-}
-void sysLogQueue_forceUpdate()
-{
-    while (statusQueue_getSize() > 0)
-    {
-        sysLogQueue_addNode();
     }
 }
 void sysLogQueue_getFullMessage(char *fullMessage, uint16_t size)
