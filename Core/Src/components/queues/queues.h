@@ -81,7 +81,7 @@ uint8_t statusQueue_getSize();
 void interpreter_status_entry_constructor(interpreter_status_entry_t *entry);
 
 //---Sys Log Queue Helper---
-void sysLogQueue_addNode();
+void sysLogQueue_addNode(interpreter_status_entry_t *statusEntry);
 void sysLogQueue_popNode();
 void sysLogQueue_forceUpdate();
 void sysLogQueue_getFullMessage(char *fullMessage, uint16_t length);

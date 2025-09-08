@@ -1,33 +1,98 @@
 {
-	"folders": [
-		{
-			"path": "."
-		},
-		{
-			"path": "Powershell"
-		}
-	],
-	"settings": {
-		"cortex-debug.armToolchainPath": "c:\\Users\\Dardo\\AppData\\Roaming\\Code\\User\\globalStorage\\bmd.stm32-for-vscode\\@xpack-dev-tools\\arm-none-eabi-gcc\\13.3.1-1.1.1\\.content\\bin",
-		"cortex-debug.openocdPath": "C:\\USERS\\DARDO\\APPDATA\\ROAMING\\CODE\\USER\\GLOBALSTORAGE\\BMD.STM32-FOR-VSCODE\\@XPACK-DEV-TOOLS\\OPENOCD\\0.12.0-4.1\\.CONTENT\\BIN\\OPENOCD.EXE",
-		"files.associations": {
-			"parser.h": "c",
-			"test.h": "c",
-			"config.h": "c",
-			"main.h": "c",
-			"fsm.h": "c",
-			"command.h": "c",
-			"interpreter.h": "c",
-			"actions.h": "c",
-			"queues.h": "c",
-			"stm32f4xx_hal.h": "c",
-			"callbacks.h": "c",
-			"switch_commute.h": "c",
-			"string.h": "c",
-			"stm32f4xx_hal_uart.h": "c"
-		},
-		"cortex-debug.variableUseNaturalFormat": true,
-		"stm32-for-vscode.openOCDPath": "C:\\USERS\\DARDO\\APPDATA\\ROAMING\\CODE\\USER\\GLOBALSTORAGE\\BMD.STM32-FOR-VSCODE\\@XPACK-DEV-TOOLS\\OPENOCD\\0.12.0-4.1\\.CONTENT\\BIN\\OPENOCD.EXE",
-		"stm32-for-vscode.armToolchainPath": "c:\\Users\\Dardo\\AppData\\Roaming\\Code\\User\\globalStorage\\bmd.stm32-for-vscode\\@xpack-dev-tools\\arm-none-eabi-gcc\\13.3.1-1.1.1\\.content\\bin"
-	}
+    "settings": {
+        "cortex-debug.armToolchainPath": "c:\\Users\\Dardo\\AppData\\Roaming\\Code\\User\\globalStorage\\bmd.stm32-for-vscode\\@xpack-dev-tools\\arm-none-eabi-gcc\\14.2.1-1.1.1\\.content\\bin",
+        "cortex-debug.openocdPath": "c:\\Users\\Dardo\\AppData\\Roaming\\Code\\User\\globalStorage\\bmd.stm32-for-vscode\\@xpack-dev-tools\\openocd\\0.12.0-6.1\\.content\\bin\\openocd.EXE",
+        "stm32-for-vscode.openOCDPath": "c:\\Users\\Dardo\\AppData\\Roaming\\Code\\User\\globalStorage\\bmd.stm32-for-vscode\\@xpack-dev-tools\\openocd\\0.12.0-6.1\\.content\\bin\\openocd.EXE",
+        "stm32-for-vscode.armToolchainPath": "c:\\Users\\Dardo\\AppData\\Roaming\\Code\\User\\globalStorage\\bmd.stm32-for-vscode\\@xpack-dev-tools\\arm-none-eabi-gcc\\14.2.1-1.1.1\\.content\\bin",
+        "files.associations": {
+            "config.h": "c",
+            "cmsis_gcc.h": "c"
+        }
+    },
+    "folders": [
+        {
+            "path": "."
+        }
+    ],
+    "launch": {
+        "configurations": [
+            {
+                "showDevDebugOutput": "parsed",
+                "cwd": "${workspaceRoot}",
+                "executable": "./build/debug/RelayMatrix.elf",
+                "name": "Debug STM32",
+                "request": "launch",
+                "type": "cortex-debug",
+                "servertype": "openocd",
+                "preLaunchTask": "Build STM",
+                "device": "stm32f401xe.s",
+                "configFiles": [
+                    "openocd.cfg"
+                ]
+            },
+            {
+                "showDevDebugOutput": "parsed",
+                "cwd": "${workspaceRoot}",
+                "executable": "./build/debug/RelayMatrix.elf",
+                "name": "Attach STM32",
+                "request": "attach",
+                "type": "cortex-debug",
+                "servertype": "openocd",
+                "preLaunchTask": "Build STM",
+                "device": "stm32f401xe.s",
+                "configFiles": [
+                    "openocd.cfg"
+                ]
+            }
+        ]
+    },
+    "tasks": {
+        "tasks": [
+            {
+                "label": "Build STM",
+                "type": "process",
+                "command": "${command:stm32-for-vscode.build}",
+                "options": {
+                    "cwd": "${workspaceRoot}"
+                },
+                "group": {
+                    "kind": "build",
+                    "isDefault": true
+                },
+                "problemMatcher": [
+                    "$gcc"
+                ]
+            },
+            {
+                "label": "Build Clean STM",
+                "type": "process",
+                "command": "${command:stm32-for-vscode.cleanBuild}",
+                "options": {
+                    "cwd": "${workspaceRoot}"
+                },
+                "group": {
+                    "kind": "build",
+                    "isDefault": true
+                },
+                "problemMatcher": [
+                    "$gcc"
+                ]
+            },
+            {
+                "label": "Flash STM",
+                "type": "process",
+                "command": "${command:stm32-for-vscode.flash}",
+                "options": {
+                    "cwd": "${workspaceRoot}"
+                },
+                "group": {
+                    "kind": "build",
+                    "isDefault": true
+                },
+                "problemMatcher": [
+                    "$gcc"
+                ]
+            }
+        ]
+    }
 }

@@ -3,7 +3,7 @@
 #include <inttypes.h>
 #include "parser.h"
 
-void command_constructor(command_t *instance, uint8_t* unformattedString) 
+void command_constructor(command_t *instance, uint8_t *unformattedString)
 {
     // Initialize parameters array to NULL
     for (int i = 0; i < MAX_PARAMS; i++)
@@ -22,7 +22,9 @@ void command_deconstructor(command_t *instance)
     // Free the unformatted string
     free(instance->unformattedString);
     // Free the parameters
-    for (int i = 0; i < MAX_PARAMS; i++)
+    // Parameters count: how many?
+    uint8_t pCount = instance->paramsCount;
+    for (int i = 0; i < pCount; i++)
     {
         free(instance->parameters[i]);
     }

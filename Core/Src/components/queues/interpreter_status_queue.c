@@ -46,6 +46,7 @@ void statusQueue_popElement()
 
     if (oldHead != NULL)
     {
+        sysLogQueue_addNode(oldHead);
         if (oldHead == curTail)
         {
             // Only one element
