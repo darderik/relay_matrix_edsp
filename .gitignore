@@ -1,1 +1,7 @@
 /build/
+/build/
+.stm32env
+RelayMatrix.code-workspace
+STM32-for-VSCode.config.yaml
+openocd.cfg
+STM32Make.make
