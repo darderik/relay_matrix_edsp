@@ -235,7 +235,7 @@ CXXFLAGS = $(MCU) $(CXX_DEFS) $(C_INCLUDES) $(OPTIMIZATION_FLAGS)
 # Add additional flags
 CFLAGS += -Wall -fdata-sections -ffunction-sections 
 ASFLAGS += -Wall -fdata-sections -ffunction-sections 
-CXXFLAGS += -fno-exceptions -fno-rtti 
+CXXFLAGS += 
 
 # Generate dependency information
 CFLAGS += -MMD -MP -MF"$(@:%.o=%.d)"
@@ -251,7 +251,7 @@ CXXFLAGS += $(ASSEMBLER_LIST_OUTPUT_FLAG)
 # LDFLAGS
 #######################################
 # link script
-LDSCRIPT = STM32F401XX_FLASH.ld
+LDSCRIPT = STM32F401RETx_FLASH.ld
 
 # libraries
 LIBS = -lc -lm -lnosys 
