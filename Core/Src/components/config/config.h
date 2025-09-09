@@ -20,12 +20,17 @@
 #define NEWLINE_STR "\\|" // pyVisa doesn't allow multichar term char so using \n or \r for multiline message may break.
 
 // Queues
-#define MAX_COMMAND_QUEUE_SIZE 32
-#define MAX_STATUS_QUEUE_SIZE 64
+#define MAX_COMMAND_QUEUE_SIZE 8
+#define MAX_STATUS_QUEUE_SIZE 16
 #define SYSLOG_SINGLE_MESSAGE_LENGTH 512
-#define SYSLOG_MAX_MESSAGES 6
-#define ACTION_DATA_MAXLENGTH 128
-
+#define SYSLOG_MAX_MESSAGES 3
+#define ISQ_QUEUE_SIZE 8
+// Actions
+#define ACTION_QUEUE_SIZE 8
+#define ACTION_MSG_LENGTH 64
+// Lengths
+#define MAX_PARAMS 8
+#define MAX_PARAM_LENGTH 64
 // Init
 #define PS_ON_GPIO GPIOC
 #define PS_ON_PIN GPIO_PIN_9
@@ -58,6 +63,4 @@ typedef struct
     uint8_t statusByte;
 } relay_group_t;
 extern relay_group_t relayGroups[4];
-
-void config_set_uart_mode(uint8_t mode);
 #endif // CONFIG_H_

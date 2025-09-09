@@ -1,11 +1,13 @@
-#include "parser.h"
+#include "unparsed_command_queue.h"
 #include "interpreter.h"
-#include "queues.h"
 #include "command.h"
 #include "main.h"
 #include "callbacks.h"
 #include <string.h>
-
+#include <stdio.h>
+#include "parser.h"
+#include "actions_list.h"
+#include "queues.h"
 const char *interpreter_flag_msg[] = {"OK", "INVALID COMMAND", "INVALID ARGS"};
 
 /**
@@ -17,15 +19,21 @@ const char *interpreter_flag_msg[] = {"OK", "INVALID COMMAND", "INVALID ARGS"};
  */
 void interpretAndExecuteCommand(interpreter_status_t *int_status)
 {
+    // Allocate interpreter status instance in isq
+    if (int_status == NULL)
+    {
+        // Critical error, no space in ISQ
+        return;
+    }
 
     // Parse first command from list of unparsed commands
     command_t *curCommandPtr = &(int_status->command);
 
     // Call command constructor here so we can pop an element
-    uint8_t *curUnformatted = unparsed_list.head->command;
+    unsigned char *curUnformatted = ucq_container.head->command;
     command_constructor(curCommandPtr, curUnformatted);
-
-    ucq_popElement();
+    // Unformatted command has been parsed, pop it from the queue
+    ucq_pop_element();
 
     // Do all checks on instance of command
     if (!command_isconsistent(curCommandPtr))
@@ -69,5 +77,14 @@ void interpretAndExecuteCommand(interpreter_status_t *int_status)
         {
             int_status->status = INTERPRETER_INVALID_COMMAND;
         }
+    }
+}
+
+void interpreter_status_constructor(interpreter_status_t *int_status)
+{
+    if (int_status != NULL)
+    {
+        action_return_constructor(&(int_status->action_return));
+        int_status->status = INTERPRETER_OK;
     }
 }

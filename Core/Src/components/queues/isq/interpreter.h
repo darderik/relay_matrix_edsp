@@ -1,7 +1,7 @@
 #include "actions.h"
+
 #ifndef INTERPRETER_H_
 #define INTERPRETER_H_
-
 // Pointer to the function associated with a root commands
 typedef enum interpreter_flag
 {
@@ -27,12 +27,21 @@ typedef struct interpreter_status
     command_t command;
     action_return_t action_return;
     interpreter_flag_t status;
+    uint8_t available;
+    struct interpreter_status *next;
 } interpreter_status_t;
-
-void interpretAndExecuteCommand(interpreter_status_t *int_status);
 
 // All functions actions, including parsing
 typedef void (*action_function_ptr)(interpreter_status_t *int_status);
+
+extern const char *interpreter_flag_msg[];
+extern interpreter_status_t isq_queue[ISQ_QUEUE_SIZE];
+
+typedef struct interpreter_status_list_container
+{
+    interpreter_status_t *head;
+    interpreter_status_t *tail;
+} interpreter_status_list_container_t;
 
 typedef struct command_table_entry
 {
@@ -40,9 +49,11 @@ typedef struct command_table_entry
     const action_function_ptr function;
 } command_table_entry_t;
 extern const command_table_entry_t command_table[];
-extern const char *interpreter_flag_msg[];
+void interpretAndExecuteCommand(interpreter_status_t *int_status);
 void interpreter_status_deconstructor(interpreter_status_t *int_status);
 void sys_log(interpreter_status_t *int_status);
 void interpreter_status_constructor(interpreter_status_t *int_status);
+void isq_init();
+interpreter_status_t *isq_add_element();
 
-#endif // INTERPRETER_H_
+#endif

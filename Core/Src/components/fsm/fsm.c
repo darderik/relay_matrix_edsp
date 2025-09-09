@@ -6,7 +6,8 @@
 #include "queues.h"
 #include "interpreter.h"
 #include "callbacks.h"
-
+#include "interpreter_status_queue.h"
+#include "sys_log_queue.h"
 state_t state = INIT;
 static uint8_t mcu_firstRun = 1;
 /**
@@ -38,6 +39,10 @@ void state_handler(UART_HandleTypeDef *huart, SPI_HandleTypeDef *hspi)
         if (mcu_firstRun)
         {
             mcu_firstRun = 0;
+            ucq_init();
+            isq_init();
+            slq_init();
+            prequeue_init();
             HAL_UARTEx_ReceiveToIdle_DMA(huart, rx_buffer, MAX_COMMAND_LENGTH);
         }
         break;
@@ -48,7 +53,7 @@ void state_handler(UART_HandleTypeDef *huart, SPI_HandleTypeDef *hspi)
         {
             state_set(MIRROR);
         }
-        else if (unparsed_list.head != NULL)
+        else if (ucq_container.head != NULL)
         {
             // Command received
             state_set(INTERPRET);
@@ -64,32 +69,29 @@ void state_handler(UART_HandleTypeDef *huart, SPI_HandleTypeDef *hspi)
         state_set(IDLE);
 
     case INTERPRET:
-        if (unparsed_list.head != NULL)
+        if (ucq_container.head != NULL)
         {
-            interpreter_status_t *int_status = (interpreter_status_t *)malloc(sizeof(interpreter_status_t));
-            interpreter_status_constructor(int_status);
+            interpreter_status_t *int_status = isq_add_element();
             interpretAndExecuteCommand(int_status);
-            statusQueue_addElement(int_status);
             if (int_status->action_return.status == ACTION_ERROR)
             {
                 state_set(FAIL);
             }
         }
-        else if (statusQueue_getSize() != 0)
+        else if (isq_get_size() != 0)
         {
             state_set(IDLE);
         }
         break;
-
     case LOG:
-        if (statusQueue_getSize() != 0)
+        if (isq_get_size() != 0)
         {
-            statusQueue_popElement();
+            isq_pop_element();
         }
         state_set(IDLE);
         break;
     case PASSIVE:
-        if (unparsed_list.head != NULL)
+        if (ucq_container.head != NULL)
         {
             state_set(INIT); // Power on again
         }
@@ -100,7 +102,7 @@ void state_handler(UART_HandleTypeDef *huart, SPI_HandleTypeDef *hspi)
         break;
     case FAIL:
         // Wait for SYS:LOG? Command
-        if (ucq_findElem("sys:log?\n") != NULL)
+        if (ucq_find_element("sys:log?\n") != NULL)
         {
             // Exit fail state, and output everything
             state_set(LOG);
@@ -108,7 +110,7 @@ void state_handler(UART_HandleTypeDef *huart, SPI_HandleTypeDef *hspi)
         else
         {
             // Wipe UCQ
-            // ucq_clearQueue();
+            // ucq_clear_queue();
             HAL_Delay(5);
         }
         break;
@@ -149,7 +151,7 @@ void sys_boot_check()
         // PWR_OK Not reached, fail state
         unsigned char msg[96];
         snprintf((char *)msg, sizeof(msg), "sys:boot->PWR_OK not reached.ATX PSU Malfunctioning.Stopping..%s", TERM_CHAR);
-        sysLogQueue_addNodeManual((char *)msg);
+        slq_add_element_manual((char *)msg);
         // HAL_UART_Transmit(&huart2, (uint8_t *)msg, strlen((char *)msg), HAL_MAX_DELAY);
         state_set(FAIL);
     }

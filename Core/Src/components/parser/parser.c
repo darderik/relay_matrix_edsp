@@ -9,7 +9,8 @@
 void parseCommand(command_t *instance, unsigned char *cmdString)
 {
     size_t rootLength = 0;
-    unsigned char *cleanedCommand = cleanCmd(cmdString);
+    unsigned char cleanedCommand[MAX_COMMAND_LENGTH];
+    cleanCmd(cmdString, cleanedCommand);
     size_t commandLength = strlen((char *)cleanedCommand);
 
     if (commandLength == 0)
@@ -21,8 +22,11 @@ void parseCommand(command_t *instance, unsigned char *cmdString)
     // Note, memchr returns pointer to char, cleanedCommand ptr gets subtracted to rootEnd(first space) and you get length
     unsigned char *rootEnd = (unsigned char *)memchr(cleanedCommand, ' ', commandLength);
     rootLength = rootEnd != NULL ? rootEnd - cleanedCommand : commandLength;
-    instance->rootCommand = (unsigned char *)strndup((const char *)cleanedCommand, rootLength);
-    instance->unformattedString = cleanedCommand;
+
+    strncpy((char *)instance->rootCommand, (const char *)cleanedCommand, rootLength);
+    instance->rootCommand[rootLength] = '\0'; // Null-terminate the string
+    strncpy((char *)instance->unformattedString, (const char *)cleanedCommand, MAX_COMMAND_LENGTH - 1);
+    instance->unformattedString[MAX_COMMAND_LENGTH - 1] = '\0'; // Ensure null-termination
 
     // Check if there are any arguments
     if (rootLength < commandLength)
@@ -34,9 +38,18 @@ void parseCommand(command_t *instance, unsigned char *cmdString)
         {
             unsigned char *argumentEnd = (unsigned char *)memchr(cleanedCommand + argumentStart, ' ', commandLength - argumentStart);
             size_t argumentLength = argumentEnd == NULL ? commandLength - argumentStart : argumentEnd - (cleanedCommand + argumentStart);
-            instance->parameters[argumentCount] = (unsigned char *)strndup((const char *)(cleanedCommand + argumentStart), argumentLength);
-            argumentStart += argumentLength + 1;
-            argumentCount++;
+
+            if (argumentCount < MAX_PARAMS && argumentStart + argumentLength < MAX_COMMAND_LENGTH)
+            {
+                strncpy((char *)instance->parameters[argumentCount], (const char *)(cleanedCommand + argumentStart), argumentLength);
+                instance->parameters[argumentCount][argumentLength] = '\0'; // Null-terminate the string
+                argumentStart += argumentLength + 1;
+                argumentCount++;
+            }
+            else
+            {
+                break; // Stop processing if limits are exceeded
+            }
         }
         instance->paramsCount = argumentCount < MAX_PARAMS ? argumentCount : MAX_PARAMS;
     }
@@ -53,10 +66,9 @@ uint8_t preParseCommand(unsigned char *cleanedString)
  * @param command_string The original command string.
  * @return char* The cleaned command string.
  */
-unsigned char *cleanCmd(unsigned char *command_string)
+unsigned char *cleanCmd(unsigned char *command_string, unsigned char *cleaned_string)
 {
     size_t command_length = strlen((char *)command_string);
-    unsigned char *cleaned_string = malloc(command_length + 1);
     size_t cleaned_string_index = 0;
     size_t in_space = 0;
 

@@ -1,7 +1,10 @@
-#ifndef ACTIONS_H_
-#define ACTIONS_H_
 #include "command.h"
 #include <inttypes.h>
+#include <stdlib.h>
+#include <string.h>
+#ifndef ACTIONS_H_
+#define ACTIONS_H_
+
 typedef enum action_status
 {
     ACTION_OK,
@@ -20,22 +23,14 @@ typedef enum action_status
  * @param toTransmit  A boolean indicating if the string in message is to be
  *                    sent through the uart channel
  */
+
 typedef struct action_return
 {
     uint8_t status;
-    //    unsigned char data[ACTION_DATA_MAXLENGTH];
-    uint8_t *message;
+    char message[ACTION_MSG_LENGTH];
     uint8_t toTransmit;
 } action_return_t;
-uint8_t command_table_size();
 
-#include "interpreter.h"
-// Actions prototypes
 void action_return_constructor(action_return_t *instance);
-void idn(interpreter_status_t *int_status);
-void sys_getstate(interpreter_status_t *int_status);
 void action_return_addMessage(action_return_t *instance, char *message, uint8_t toTransmit);
-void action_return_deconstructor(action_return_t *instance);
-void sys_halt(interpreter_status_t *int_status);
-void opc(interpreter_status_t *int_status);
-#endif // ACTIONS_H_
+#endif

@@ -35,7 +35,7 @@ void prequeue_to_ucq()
     {
         if (!prequeue[i].available)
         {
-            ucq_addElement(prequeue[i].command);
+            ucq_add_element(prequeue[i].command);
             prequeue_remove(i);
             return;
         }

@@ -76,21 +76,20 @@ endif
 # C sources
 C_SOURCES =  \
 Core/Src/components/actions/actions.c \
-Core/Src/components/actions/actions_helper.c \
+Core/Src/components/actions/actions_list.c \
 Core/Src/components/actions/switch_commute/switch_commute.c \
 Core/Src/components/command/command_helper.c \
 Core/Src/components/config/config.c \
 Core/Src/components/fsm/fsm.c \
-Core/Src/components/interpreter/interpreter.c \
-Core/Src/components/interpreter/interpreter_helper.c \
-Core/Src/components/interpreter/parser/src/parser.c \
 Core/Src/components/nanotimer/nanotimer.c \
+Core/Src/components/parser/parser.c \
 Core/Src/components/peripherals/callbacks.c \
 Core/Src/components/peripherals/callbacks_prequeue.c \
-Core/Src/components/queues/interpreter_status_queue.c \
+Core/Src/components/queues/isq/interpreter.c \
+Core/Src/components/queues/isq/interpreter_status_queue.c \
 Core/Src/components/queues/queues.c \
-Core/Src/components/queues/sys_log_queue.c \
-Core/Src/components/queues/unparsed_command_queue.c \
+Core/Src/components/queues/syslog/sys_log_queue.c \
+Core/Src/components/queues/ucq/unparsed_command_queue.c \
 Core/Src/main.c \
 Core/Src/stm32f4xx_hal_msp.c \
 Core/Src/stm32f4xx_it.c \
@@ -212,11 +211,13 @@ C_INCLUDES =  \
 -ICore/Src/components/command \
 -ICore/Src/components/config \
 -ICore/Src/components/fsm \
--ICore/Src/components/interpreter \
--ICore/Src/components/interpreter/parser/include \
 -ICore/Src/components/nanotimer \
+-ICore/Src/components/parser \
 -ICore/Src/components/peripherals \
 -ICore/Src/components/queues \
+-ICore/Src/components/queues/isq \
+-ICore/Src/components/queues/syslog \
+-ICore/Src/components/queues/ucq \
 -IDrivers/CMSIS/Device/ST/STM32F4xx/Include \
 -IDrivers/CMSIS/Include \
 -IDrivers/STM32F4xx_HAL_Driver/Inc \

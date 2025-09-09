@@ -3,42 +3,19 @@
 #include <inttypes.h>
 #include "parser.h"
 
-void command_constructor(command_t *instance, uint8_t *unformattedString)
+void command_constructor(command_t *instance, unsigned char *unformattedString)
 {
-    // Initialize parameters array to NULL
+    // Initialize parameters to ""
     for (int i = 0; i < MAX_PARAMS; i++)
     {
-        instance->parameters[i] = NULL;
+        memset(instance->parameters[i], '\0', MAX_COMMAND_LENGTH);
     }
     instance->paramsCount = 0;
-    instance->rootCommand = NULL;
-    instance->unformattedString = NULL;
+    memset(instance->rootCommand, '\0', MAX_COMMAND_LENGTH);
+    memset(instance->unformattedString, '\0', MAX_COMMAND_LENGTH);
     parseCommand(instance, unformattedString);
 }
-void command_deconstructor(command_t *instance)
-{
-    // Free the root command
-    free(instance->rootCommand);
-    // Free the unformatted string
-    free(instance->unformattedString);
-    // Free the parameters
-    // Parameters count: how many?
-    uint8_t pCount = instance->paramsCount;
-    for (int i = 0; i < pCount; i++)
-    {
-        free(instance->parameters[i]);
-    }
-    free(instance);
-}
-/**
- * @brief      Check if the command instance is consistent
- * @details    The command is considered consistent if:
- *             - the root command is not empty
- *             - the unformatted string is not empty
- *             - the parameters are not empty and not null
- * @param      instance The command instance to be checked
- * @return     1 if the command is consistent, 0 otherwise
- */
+
 uint8_t command_isconsistent(command_t *instance)
 {
     uint8_t isConsistent = 1;
@@ -55,7 +32,7 @@ uint8_t command_isconsistent(command_t *instance)
     // Check if the parameters are consistent
     for (int i = 0; i < instance->paramsCount; i++)
     {
-        if (instance->parameters[i] != NULL)
+        if (strlen((char *)instance->parameters[i]) != 0)
         {
             if (strlen((char *)instance->parameters[i]) == 0)
             {
