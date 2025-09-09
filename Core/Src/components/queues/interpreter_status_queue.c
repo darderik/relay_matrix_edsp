@@ -60,11 +60,18 @@ void statusQueue_popElement()
         // Deconstruct the status inside the entry
         interpreter_status_deconstructor(oldHead->status);
         // Free the interpreter_status_entry_t struct
-        free(oldHead);
+        interpreter_status_entry_deconstructor(oldHead);
     }
 }
 void interpreter_status_entry_constructor(interpreter_status_entry_t *entry)
 {
     entry->status = NULL;
     entry->next = NULL;
+}
+void interpreter_status_entry_deconstructor(interpreter_status_entry_t *entry)
+{
+    if (entry != NULL)
+    {
+        free(entry);
+    }
 }
