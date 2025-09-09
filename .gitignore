@@ -1,1 +1,8 @@
-/build/
+build
+.stm32env
+*.code-workspace
+STM32-for-VSCode.config.yaml
+openocd.cfg
+STM32Make.make
+.vscode
+STM32-for-VSCode.config.yaml

@@ -1,16 +1,4 @@
 {
     "cortex-debug.armToolchainPath": "c:\\Users\\Dardo\\AppData\\Roaming\\Code\\User\\globalStorage\\bmd.stm32-for-vscode\\@xpack-dev-tools\\arm-none-eabi-gcc\\14.2.1-1.1.1\\.content\\bin",
-    "cortex-debug.openocdPath": "c:\\Users\\Dardo\\AppData\\Roaming\\Code\\User\\globalStorage\\bmd.stm32-for-vscode\\@xpack-dev-tools\\openocd\\0.12.0-6.1\\.content\\bin\\openocd.EXE",
-    "stm32-for-vscode.openOCDPath": "c:\\Users\\Dardo\\AppData\\Roaming\\Code\\User\\globalStorage\\bmd.stm32-for-vscode\\@xpack-dev-tools\\openocd\\0.12.0-6.1\\.content\\bin\\openocd.EXE",
-    "stm32-for-vscode.armToolchainPath": "c:\\Users\\Dardo\\AppData\\Roaming\\Code\\User\\globalStorage\\bmd.stm32-for-vscode\\@xpack-dev-tools\\arm-none-eabi-gcc\\14.2.1-1.1.1\\.content\\bin",
-    "cmake.sourceDirectory": "D:/OneDrive - Universita degli Studi Roma Tre/Repository/Esame/RelayMatrix/Drivers/CMSIS/NN",
-    "cortex-debug.variableUseNaturalFormat": true,
-    "files.associations": {
-        "switch_commute.h": "c",
-        "queues.h": "c"
-    },
-    "C_Cpp.default.compilerPath": "C:\\ProgramData\\mingw64\\mingw64\\bin\\gcc.exe",
-    "files.autoSave": "onWindowChange",
-    "editor.formatOnPaste": false,
-    "editor.formatOnSave": true
+    "cortex-debug.openocdPath": "c:\\Users\\Dardo\\AppData\\Roaming\\Code\\User\\globalStorage\\bmd.stm32-for-vscode\\@xpack-dev-tools\\openocd\\0.12.0-6.1\\.content\\bin\\openocd.EXE"
 }
