@@ -53,7 +53,6 @@ void interpretAndExecuteCommand(interpreter_status_t *int_status);
 void interpreter_status_deconstructor(interpreter_status_t *int_status);
 void sys_log(interpreter_status_t *int_status);
 void interpreter_status_constructor(interpreter_status_t *int_status);
-void isq_init();
 interpreter_status_t *isq_add_element();
 
 #endif
