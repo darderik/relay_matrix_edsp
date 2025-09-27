@@ -53,6 +53,13 @@ void switch_commute_handler(interpreter_status_t *int_status)
                 {
                     switch_commute(int_status, curIn, curOut);
                 }
+                else if (strcicmp((char *)commandData.rootCommand, "SWITCH:COMMUTE:MONO") == 0)
+                {
+                    // Call reset all
+                    switch_commute_reset_all(int_status);
+                    //Now switch the requested relay(s)
+                    switch_commute(int_status, curIn, curOut);
+                }
             }
             else
             {
