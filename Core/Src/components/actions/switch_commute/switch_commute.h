@@ -9,6 +9,7 @@ void transmitSPI(relay_group_t *curGroup, uint8_t byteP, uint8_t isLatching);
 void switch_commute(interpreter_status_t *int_status, uint8_t curIn, uint8_t curOut);
 void switch_commute_exclusive(interpreter_status_t *int_status, uint8_t curIn, uint8_t curOut);
 void switch_commute_reset(interpreter_status_t *int_status, uint8_t curIn, uint8_t curOut);
+void switch_commute_reset_group(interpreter_status_t *int_status);
 void switch_commute_reset_all(interpreter_status_t *int_status);
 void switch_commute_handler(interpreter_status_t *int_status);
 void switch_commute_status(interpreter_status_t *int_status);

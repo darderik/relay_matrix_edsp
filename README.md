@@ -44,7 +44,7 @@ Group D: NCS→PC5,  NRST→PC6
 ### Basic Relay Control
 ```
 SWITCH:COMMUTE <relay>           # Activate specific relay
-SWITCH:COMMUTE:EXCLUSIVE <relay> # Activate relay, deactivate others in group
+SWITCH:COMMUTE:EXCLUSIVE <relay> # Activate relay, deactivate others in same group
 SWITCH:COMMUTE:RESET <relay>     # Deactivate specific relay
 SWITCH:COMMUTE:RESET:ALL         # Deactivate all relays
 ```

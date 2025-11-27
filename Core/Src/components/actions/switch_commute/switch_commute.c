@@ -6,7 +6,6 @@
 #include "config.h"
 #include "main.h"
 #include "switch_commute.h"
-#include "nanotimer.h"
 #include "fsm.h"
 #include "string.h"
 #include <stdlib.h>
@@ -24,8 +23,39 @@ void switch_commute_status(interpreter_status_t *int_status)
         }
     }
 }
-
 // SWITCH:COMMUTE --------------------------------------------------------------
+void switch_commute_reset_group(interpreter_status_t *int_status)
+{
+    for (uint8_t i = 0; i < int_status->command.paramsCount; i++)
+    {
+        // ROOT:CMD A B C ...
+        unsigned char *curParam = int_status->command.parameters[i];
+        uint8_t curIn = (uint8_t)curParam[0] - 'a'; // Convert a-c to 0-3
+        if (curIn >= sizeof(relayGroups) / sizeof(relay_group_t) || curIn < 0)
+        {
+            // Invalid args
+            int_status->status = INTERPRETER_INVALID_ARGS;
+        }
+        else
+        {
+            relay_group_t *curGroup = &relayGroups[curIn];
+            if (checkResetStatus(curGroup, int_status, 0))
+            {
+                switch (SWITCH_COMMUTE_MODE)
+                {
+                case SWITCH_SSR:
+                    transmitSPI(curGroup, 0, 0);
+                    break;
+                case SWITCH_EMR:
+                    transmitSPI(curGroup, RSTBYTE, 1);
+                default:
+                    break;
+                }
+                curGroup->statusByte = 0;
+            }
+        }
+    }
+}
 void switch_commute_handler(interpreter_status_t *int_status)
 {
     command_t commandData = int_status->command;
@@ -57,7 +87,7 @@ void switch_commute_handler(interpreter_status_t *int_status)
                 {
                     // Call reset all
                     switch_commute_reset_all(int_status);
-                    //Now switch the requested relay(s)
+                    // Now switch the requested relay(s)
                     switch_commute(int_status, curIn, curOut);
                 }
             }
@@ -302,7 +332,7 @@ void transmitSPI(relay_group_t *curGroup, uint8_t byteP, uint8_t isLatching)
     {
         HAL_Delay(30);         // Debounce, HFD2-012-S-L2 Datasheet
         manualReset(curGroup); // Open Drain OFF
-        waitMultiple20ns(10);  // Delay before next word
+        HAL_Delay(1);          // Delay before next word
     }
 }
 /**
@@ -320,7 +350,7 @@ void manualReset(relay_group_t *curGroup)
 GPIO_PinState configAndRead(GPIO_TypeDef *GPIOx, uint16_t Pin)
 {
     HAL_GPIO_WritePin(GPIOx, Pin, GPIO_PIN_SET); // H-Z
-    waitMultiple20ns(10);
+    HAL_Delay(1);
     GPIO_PinState pinState = HAL_GPIO_ReadPin(GPIOx, Pin);
     return pinState;
 }

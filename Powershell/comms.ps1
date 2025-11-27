@@ -1,4 +1,3 @@
-
 <#
 "switch:commute:reset:all",
 "switch:commute a1 a2 a3 a4",
@@ -36,7 +35,7 @@ function openComPort {
     $port = New-Object System.IO.Ports.SerialPort("COM$number", $baud, 'None', 8, 'One')
     if ($port.IsOpen) {
         $port.Close()
-        Write-Host "Porta COM3 chiusa prima di riaprirla."
+        Write-Host "COM3 port closed before reopening."
     }
     $port.Open()
     return $port
@@ -60,8 +59,7 @@ $CommandList = @(
 "switch:commute d3",
 "switch:commute d4"
 )
-#Setup della COM3
-#Baudrate = 9600, Terminator: \r\n, Encoding: ASCII, Databits: 8, Parity: None, Stopbits: 1
+#Setup of COM3
 [System.IO.Ports.SerialPort] $SerialPort = openComPort 11 115200
 $SerialPort.Encoding = [System.Text.Encoding]::ASCII
     
@@ -75,7 +73,7 @@ try {
             while (-not $SerialPort.ReadExisting() -contains "OK") {}
             # Received CTS
             $stopwatch.Stop()
-            Write-Host "Tempo trascorso: $($stopwatch.Elapsed.TotalMilliseconds) ms"
+            Write-Host "Elapsed time: $($stopwatch.Elapsed.TotalMilliseconds) ms"
             Start-Sleep -Seconds 2
         }
         Start-Sleep -Seconds 5
