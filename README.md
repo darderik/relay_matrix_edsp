@@ -88,24 +88,39 @@ SWITCH:COMMUTE:RESET a1 a2       # Disconnect A from 1 and 2
 ## 🚀 Getting Started
 
 ### Prerequisites
-- STM32CubeIDE or compatible ARM toolchain
-- STM32CubeProgrammer for flashing  
-- ST-Link debugger/programmer (included in STM32F401RE Nucleo)
-- VS Code with STM32 extension (recommended for this workspace)
+- VS Code
+- **STM32Cube for VS Code** extension (STMicroelectronics)
+- STM32CubeMX (installed locally; used by the extension to open `RelayMatrix.ioc` and regenerate code)
+- ARM GNU Toolchain (`arm-none-eabi-gcc`), CMake, and Ninja
+- OpenOCD + ST-LINK (for flashing/debug)
 
-### Building the Project
+> Note: This repository already contains CubeMX-generated sources (`Core/`, `Drivers/`) and a CMake build that consumes them via `cmake/stm32cubemx`. If you change the hardware configuration (clocks/pinout/peripherals), regenerate code from the `.ioc` and keep the default output folders (or update `cmake/stm32cubemx/CMakeLists.txt` accordingly).
 
-#### Using VS Code Tasks
-```bash
-# Build the project
-Ctrl+Shift+P → "Tasks: Run Task" → "Build STM"
+### Recommended VS Code Workflow (STM32Cube)
 
-# Clean build
-Ctrl+Shift+P → "Tasks: Run Task" → "Build Clean STM"
+1. Install the **STM32Cube for VS Code** extension.
+2. In VS Code settings, point the extension to your local STM32CubeMX installation (and optional tools like STM32CubeProgrammer/OpenOCD if the extension requests paths).
+3. Open this folder/workspace.
+4. Open `RelayMatrix.ioc` and use the STM32Cube actions to **Generate Code** when needed.
 
-# Flash to device
-Ctrl+Shift+P → "Tasks: Run Task" → "Flash STM"
-```
+### Building
+
+This project builds with CMake/Ninja. The workspace already provides ready-to-run VS Code tasks:
+
+- `Ctrl+Shift+P` → **Tasks: Run Task** → **Build: CMake Debug**
+- `Ctrl+Shift+P` → **Tasks: Run Task** → **Build: CMake (default preset)**
+- `Ctrl+Shift+P` → **Tasks: Run Task** → **Build: Ninja default**
+- `Ctrl+Shift+P` → **Tasks: Run Task** → **Build: Ninja (build folder)**
+
+If you prefer the command line, you can also use CMake presets (see `CMakePresets.json`).
+
+### Flashing
+
+Use the provided OpenOCD task:
+
+- `Ctrl+Shift+P` → **Tasks: Run Task** → **Flash: OpenOCD (flash-only)**
+
+This programs `debug/RelayMatrix.elf` using `openocd.cfg`.
 
 
 ### Hardware Setup
